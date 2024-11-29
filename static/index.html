@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snow Day Predictor</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Snow Day Predictor</h1>
+            <div class="last-updated">Last updated: <span id="updateTime"></span></div>
+        </header>
+
+        <main>
+            <div class="decision-panel">
+                <div class="decision-header">Final Decision</div>
+                <div id="finalDecision" class="decision-content markdown-content">
+                    <!-- Decision will be inserted here -->
+                </div>
+            </div>
+
+            <div class="conversation-panel">
+                <div class="conversation-header">Agent Discussion</div>
+                <div id="conversation" class="conversation-content">
+                    <!-- Conversation will be inserted here -->
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Powered by AI - Updated daily</p>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 
