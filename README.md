@@ -1,6 +1,6 @@
 # Snow Day Prediction Platform
 
-A multi-agent system that predicts snow days using weather data and simulates a decision-making process between school administrators. Features a modern web interface for viewing predictions.
+A multi-agent system that predicts snow days using weather data and simulates a decision-making process between school administrators. Features a modern web interface for viewing predictions and customizable snow day criteria.
 
 ## Prerequisites
 
@@ -14,12 +14,14 @@ A multi-agent system that predicts snow days using weather data and simulates a 
 - Weather analysis using real-time data from WeatherAPI
 - Three specialized agents:
   1. Weather Agent: Analyzes weather data
-  2. Superintendent: Makes initial snow day decisions
+  2. Superintendent: Makes initial snow day decisions with probability assessment
   3. Vice Superintendent: Reviews and validates decisions
 - Natural conversation flow between agents
 - Automated decision-making process
 - Modern web interface for viewing predictions
 - Daily updates via GitHub Actions
+- Customizable snow day criteria via external file
+- School-specific theming support
 
 ## Setup
 
@@ -36,6 +38,31 @@ A multi-agent system that predicts snow days using weather data and simulates a 
    - OpenAI API key from [OpenAI Platform](https://platform.openai.com/api-keys)
    - Weather API key from [WeatherAPI](https://www.weatherapi.com/)
 5. Add your API keys and configuration to the `.env` file
+
+## Snow Day Criteria Configuration
+
+The system uses a customizable criteria file to determine snow day conditions:
+
+1. Create a `snowday_criteria.txt` file in your preferred location
+2. Format each criterion on a new line
+3. Example criteria:
+   ```
+   Snow accumulation of 6 inches or more
+   Temperature below 15°F
+   Wind chill advisory in effect
+   Freezing rain forecast
+   ```
+4. The system will dynamically load these criteria during the decision process
+5. Superintendent will consider ALL criteria when making decisions
+6. Each decision includes a percentage probability of declaring a snow day
+
+### Criteria File Guidelines
+
+- Keep criteria clear and specific
+- One condition per line
+- Focus on measurable weather conditions
+- Include both weather and safety factors
+- File can be updated without code changes
 
 ## Usage
 
@@ -60,6 +87,8 @@ The project includes a modern web interface for viewing predictions:
 - Displays the final decision and agent conversation
 - Updates automatically when new predictions are made
 - Supports markdown formatting for agent messages
+- Customizable color scheme for school branding
+- Clear distinction between conversation participants
 
 ### Local Development
 ```bash
@@ -82,6 +111,8 @@ python -m http.server --directory static
 - Weather data focuses on evening to morning period (7 PM - 8 AM)
 - Maximum conversation iterations is set to 10
 - Supports custom OpenAI models via MODEL_NAME in .env
+- Customizable snow day criteria via external file
+- Configurable UI theming in styles.css
 
 ## Troubleshooting
 

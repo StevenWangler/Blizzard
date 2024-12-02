@@ -25,9 +25,6 @@ from typing import Dict, Any, Optional, List
 import requests
 from dotenv import load_dotenv
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-
 class WeatherAPI:
     """
     WeatherAPI client for fetching weather forecast data.
@@ -47,12 +44,12 @@ class WeatherAPI:
         self.api_key = os.getenv("WEATHER_API_KEY")
         if not self.api_key:
             logging.error("WEATHER_API_KEY not found in environment variables")
-        else:
-            logging.info("WEATHER_API_KEY loaded successfully")
+            raise ValueError("WEATHER_API_KEY not found in environment variables")
+        logging.debug("WEATHER_API_KEY loaded successfully")
         
         self.base_url = "http://api.weatherapi.com/v1"
         self.zip_code = os.getenv("ZIP_CODE", "49341")
-        logging.info(f"Using ZIP code: {self.zip_code}")
+        logging.debug(f"Using ZIP code: {self.zip_code}")
 
     def get_forecast(self) -> Optional[Dict[str, Any]]:
         """
@@ -76,7 +73,7 @@ class WeatherAPI:
                   f'&aqi=no'
                   f'&alerts=yes')
             
-            logging.info(f"Making request to WeatherAPI with URL: {url.replace(self.api_key, '[REDACTED]')}")
+            logging.debug(f"Making request to WeatherAPI with URL: {url.replace(self.api_key, '[REDACTED]')}")
             response = requests.get(url, timeout=30)
             response.raise_for_status()
             return response.json()
@@ -157,7 +154,7 @@ def get_relevant_weather_information(forecast_data: Dict[str, Any]) -> Dict[str,
     Raises:
         KeyError: If required data is missing from the forecast
     """
-    logging.info('Getting relevant weather info from evening to next morning')
+    logging.debug('Getting relevant weather info from evening to next morning')
     weather_data = {}
 
     try:

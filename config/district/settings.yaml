@@ -1,0 +1,24 @@
+# District Snow Day Settings
+
+# Snow Day Status
+snow_days:
+  allotted: 6
+  used: 0
+
+# Community Context
+community:
+  state: "Michigan"
+  type: "rural"  # urban, suburban, rural
+  winter_experience: "experienced"  # experienced, moderate, inexperienced
+  bus_dependent_percentage: 75
+
+# Current Conditions
+current:
+  hype_level: 1  # Scale of 1-10
+  nearby_closures: 0  # Number of nearby districts closed
+  social_media_buzz: "low"  # high, medium, low
+
+# Additional Notes
+notes:
+  - "Since we live in Michigan, our community is used to snow and winter weather - factor this in when making decisions, it usually takes a lot to close schools"
+  - "You should be conservative when calling snow days, they are not just given out like candy to make everyone happy"

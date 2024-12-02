@@ -1,0 +1,79 @@
+Determine if the conversation should terminate based on these rules:
+
+REQUIRED SEQUENCE:
+1. WeatherAgent provides weather report
+2. Blizzard asks Assistant for input
+3. Assistant provides analysis
+4. Blizzard and Assistant discuss (may repeat)
+5. Assistant confirms all questions answered
+6. Assistant acknowledges discussion complete
+7. Blizzard makes final decision
+
+REQUIRED FINAL MESSAGE FORMAT (must match exactly):
+---BEGIN FINAL DECISION---
+FINAL SNOW DAY DECISION
+
+Based on our thorough analysis:
+
+[2-3 sentences summarizing key factors]
+
+Snow Days: [Used X of Y allotted]
+Community Factors: [Type, experience level, transportation needs]
+Current Conditions: [Hype level, nearby closures, social activity]
+Weather Analysis: [Key weather factors and risks]
+
+Snow Day Probability: X%
+---END FINAL DECISION---
+
+DO NOT TERMINATE IF ANY OF THESE ARE TRUE:
+- Less than 4 messages exchanged
+- Assistant's last message contains questions
+- Assistant's last message contains suggestions
+- Assistant's last message contains "Decision Suggestion"
+- Assistant's last message contains "Scenario"
+- Assistant's last message contains "Recommendation"
+- Last message is not from Blizzard
+- Last message doesn't match format exactly including delimiters
+- Last message suggests waiting or monitoring
+- Last message contains questions
+- Any question in conversation remains unanswered
+- Assistant hasn't confirmed discussion complete
+- Assistant's points haven't been addressed
+- Discussion ended prematurely
+- Final decision format doesn't include delimiters
+
+ONLY TERMINATE WHEN ALL OF THESE ARE TRUE:
+- At least 4 messages exchanged
+- WeatherAgent has provided report
+- Assistant has provided analysis
+- All questions have been answered
+- All suggestions have been addressed
+- Assistant confirms discussion complete
+- Assistant acknowledges all points addressed
+- Last message is from Blizzard
+- Last message matches format exactly including delimiters
+- No pending discussion points
+- No unanswered questions remain
+- No premature termination attempted
+- Final decision includes both BEGIN and END delimiters
+
+QUESTION TRACKING:
+- Track all messages containing "?"
+- Ensure each question has a response
+- Verify responses are acknowledged
+- Confirm Assistant is satisfied
+- No open questions remain
+
+FINAL FORMAT VALIDATION:
+1. Must start with "---BEGIN FINAL DECISION---"
+2. Must contain "FINAL SNOW DAY DECISION"
+3. Must contain all required sections
+4. Must end with "---END FINAL DECISION---"
+5. No text before BEGIN or after END delimiters
+
+History:
+{{$history}}
+
+RESPOND WITH EXACTLY ONE OF THESE TWO WORDS:
+TERMINATE
+CONTINUE 

@@ -8,8 +8,8 @@ and make collaborative decisions.
 
 The system consists of three main agents:
 1. Weather Agent: Analyzes weather conditions and provides detailed reports
-2. Superintendent: Makes initial snow day decisions based on weather analysis
-3. Vice Superintendent: Reviews and validates decisions
+2. Blizzard: Makes initial snow day decisions based on weather analysis
+3. Blizzard's Assistant: Reviews and validates decisions
 
 The agents communicate through a structured chat system, with their conversation
 and final decision being saved to a JSON file for web display.
@@ -26,6 +26,7 @@ import os
 import sys
 import time
 from datetime import datetime
+from pathlib import Path
 
 # Third-party imports
 from dotenv import load_dotenv
@@ -41,17 +42,34 @@ from semantic_kernel.contents.chat_message_content import ChatMessageContent
 from semantic_kernel.contents.utils.author_role import AuthorRole
 from semantic_kernel.functions.kernel_function_from_prompt import KernelFunctionFromPrompt
 from semantic_kernel.kernel import Kernel
+import yaml
 
 # Local imports
 from weather.weather_data import WeatherAPI, get_relevant_weather_information
 
 # Constants
 WEATHER_AGENT = "WeatherAgent"
-SUPERINTENDENT = "Superintendent"
-VICE_SUPERINTENDENT = "ViceSuperintendent"
+BLIZZARD = "Blizzard"
+BLIZZARD_ASSISTANT = "BlizzardAssistant"
 MAX_RETRIES = 5
 RETRY_DELAY = 1  # seconds
 REQUEST_TIMEOUT = 30  # seconds
+
+# Set up logging configuration immediately
+log_dir = Path("logs")
+log_dir.mkdir(exist_ok=True)
+
+logging.basicConfig(
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    level=logging.INFO,
+    handlers=[
+        logging.FileHandler(log_dir / "blizzard.log", mode='w', encoding='utf-8'),
+        logging.StreamHandler()
+    ]
+)
+
+logger = logging.getLogger(__name__)
+logger.info("Starting Blizzard snow day prediction system")
 
 class RateLimitedOpenAIChatCompletion(OpenAIChatCompletion):
     """
@@ -96,17 +114,18 @@ class RateLimitedOpenAIChatCompletion(OpenAIChatCompletion):
             except Exception as e:
                 if "rate" in str(e).lower() and attempt < MAX_RETRIES - 1:
                     wait_time = RETRY_DELAY * (2 ** attempt)
-                    logging.info(f"Rate limit hit, waiting {wait_time} seconds before retry...")
+                    logging.debug(f"Rate limit hit, waiting {wait_time} seconds before retry...")
                     await asyncio.sleep(wait_time)
                     continue
                 raise
 
-def _create_kernel_with_chat_service(service_id: str) -> Kernel:
+def _create_kernel_with_chat_service(service_id: str, model_override: str = None) -> Kernel:
     """
     Create a new kernel with a rate-limited chat service.
     
     Args:
         service_id (str): Unique identifier for the chat service
+        model_override (str, optional): Override the default model for this specific service
         
     Returns:
         Kernel: Configured kernel with the chat service added
@@ -119,7 +138,7 @@ def _create_kernel_with_chat_service(service_id: str) -> Kernel:
         kernel = Kernel()
         chat_service = RateLimitedOpenAIChatCompletion(
             service_id=service_id,
-            ai_model_id=model_name,
+            ai_model_id=model_override or model_name,  # Use override if provided, else default
             api_key=openai_key
         )
         kernel.add_service(chat_service)
@@ -129,8 +148,109 @@ def _create_kernel_with_chat_service(service_id: str) -> Kernel:
         if "api_key" in str(e).lower():
             logging.error("API key validation failed. Please check your .env file and ensure the OPENAI_API_KEY is correct.")
         elif "model" in str(e).lower():
-            logging.error(f"Model '{model_name}' not available. Please check your OpenAI account access.")
+            logging.error(f"Model '{model_override or model_name}' not available. Please check your OpenAI account access.")
         raise
+
+def read_prompt(filename):
+    """Read a prompt from a file in the agent instructions directory."""
+    with open(f"agent instructions/{filename}", "r") as f:
+        return f.read().strip()
+
+def read_criteria():
+    """
+    Read the district's closure criteria for weather-related school cancellations.
+    
+    Returns:
+        str: The district's criteria for school closures, or a default message if not found.
+        
+    The function looks for the criteria file in the following locations:
+    1. config/district/closure_criteria.txt (preferred location)
+    2. misc data/snowday_criteria.txt (legacy location for backward compatibility)
+    """
+    possible_locations = [
+        "config/district/closure_criteria.txt",  # New preferred location
+        "misc data/snowday_criteria.txt"         # Legacy location
+    ]
+    
+    for file_path in possible_locations:
+        try:
+            with open(file_path, "r", encoding='utf-8') as f:
+                content = f.read().strip()
+                if not content:
+                    logging.warning(f"Criteria file {file_path} is empty")
+                    continue
+                logging.info(f"Successfully loaded district criteria from {file_path}")
+                return content
+        except FileNotFoundError:
+            logging.debug(f"No criteria file found at {file_path}")
+            continue
+        except PermissionError:
+            logging.error(f"Permission denied when trying to read {file_path}")
+            continue
+        except UnicodeDecodeError:
+            logging.error(f"Encoding issue when reading {file_path}. Ensure the file is UTF-8 encoded.")
+            continue
+        except Exception as e:
+            logging.error(f"Unexpected error reading {file_path}: {str(e)}")
+            continue
+
+    # If we get here, no valid criteria file was found
+    default_criteria = """Default School Closure Criteria:
+- Consider student and staff safety as the primary factor
+- Monitor weather conditions including temperature, precipitation, and wind
+- Evaluate road conditions and transportation safety
+- Account for building and facility operations
+Please replace this with your district's specific criteria in config/district/closure_criteria.txt"""
+    
+    logging.warning("No district criteria file found. Using default criteria. "
+                   "Please create config/district/closure_criteria.txt with your district's specific criteria.")
+    return default_criteria
+
+def read_settings():
+    """Read district settings from YAML file."""
+    try:
+        with open("config/district/settings.yaml", "r") as f:
+            return yaml.safe_load(f)
+    except Exception as e:
+        logging.error(f"Failed to load district settings: {str(e)}")
+        return {}
+
+def format_settings_for_agents(settings):
+    """Format settings into a readable string for agents."""
+    if not settings:
+        return "No district settings available."
+    
+    formatted = "DISTRICT CONTEXT AND SETTINGS:\n\n"
+    
+    # Snow Days Status
+    snow_days = settings.get('snow_days', {})
+    formatted += "Snow Day Status:\n"
+    formatted += f"- Allotted snow days: {snow_days.get('allotted', 'N/A')}\n"
+    formatted += f"- Used snow days: {snow_days.get('used', 'N/A')}\n\n"
+    
+    # Community Context
+    community = settings.get('community', {})
+    formatted += "Community Context:\n"
+    formatted += f"- State: {community.get('state', 'N/A')}\n"
+    formatted += f"- Community type: {community.get('type', 'N/A')}\n"
+    formatted += f"- Winter experience: {community.get('winter_experience', 'N/A')}\n"
+    formatted += f"- Bus dependent students: {community.get('bus_dependent_percentage', 'N/A')}%\n\n"
+    
+    # Current Conditions
+    current = settings.get('current', {})
+    formatted += "Current Conditions:\n"
+    formatted += f"- Community hype level: {current.get('hype_level', 'N/A')}/10\n"
+    formatted += f"- Nearby district closures: {current.get('nearby_closures', 'N/A')}\n"
+    formatted += f"- Social media activity: {current.get('social_media_buzz', 'N/A')}\n\n"
+    
+    # Additional Notes
+    notes = settings.get('notes', [])
+    if notes:
+        formatted += "Important Community Notes:\n"
+        for note in notes:
+            formatted += f"- {note}\n"
+    
+    return formatted
 
 async def main():
     """
@@ -146,138 +266,86 @@ async def main():
         Exception: If any part of the process fails
     """
     try:
-        # Create separate kernels for each agent
-        weather_kernel = _create_kernel_with_chat_service("weather_chat")
-        superintendent_kernel = _create_kernel_with_chat_service("superintendent_chat")
-        vice_kernel = _create_kernel_with_chat_service("vice_chat")
-        selection_kernel = _create_kernel_with_chat_service("selection_chat")
-        termination_kernel = _create_kernel_with_chat_service("termination_chat")
+        # Read district criteria and settings
+        try:
+            district_criteria = read_criteria()
+            district_settings = read_settings()
+            settings_text = format_settings_for_agents(district_settings)
+        except Exception as e:
+            logging.error(f"Failed to load district information: {str(e)}")
+            district_criteria = "ERROR: Failed to load district criteria."
+            settings_text = "ERROR: Failed to load district settings."
+        
+        # Create separate kernels for each agent with specific models
+        weather_kernel = _create_kernel_with_chat_service("weather_chat", os.getenv("WEATHER_MODEL"))
+        blizzard_kernel = _create_kernel_with_chat_service("blizzard_chat", os.getenv("BLIZZARD_MODEL"))
+        assistant_kernel = _create_kernel_with_chat_service("assistant_chat", os.getenv("ASSISTANT_MODEL"))
+        selection_kernel = _create_kernel_with_chat_service("selection_chat", os.getenv("SELECTION_MODEL"))
+        termination_kernel = _create_kernel_with_chat_service("termination_chat", os.getenv("TERMINATION_MODEL"))
 
         # Create Weather Agent with enhanced weather analysis capabilities
         agent_weather = ChatCompletionAgent(
             service_id="weather_chat",
             kernel=weather_kernel,
             name=WEATHER_AGENT,
-            instructions="""
-                You are a weather analysis agent with expertise in winter weather conditions. Your role is to:
-                1. Analyze detailed weather data including:
-                   - Temperature and wind chill
-                   - Snow accumulation and precipitation chances
-                   - Wind speeds and visibility
-                   - Weather alerts and their severity
-                2. Focus on the critical overnight period (7 PM to 8 AM)
-                3. Provide a comprehensive analysis considering:
-                   - Ground conditions and snow accumulation
-                   - Travel safety based on visibility and wind
-                   - Temperature trends and wind chill factors
-                4. Highlight any weather alerts and their implications
-                
-                Format your response with specific data points and clear analysis of safety implications.
-                """,
+            instructions=read_prompt("weather_agent.txt"),
         )
 
-        # Create Superintendent Agent with detailed decision criteria
-        agent_superintendent = ChatCompletionAgent(
-            service_id="superintendent_chat",
-            kernel=superintendent_kernel,
-            name=SUPERINTENDENT,
-            instructions="""
-                You are a school superintendent responsible for snow day decisions. Your role is to:
-                1. Analyze the detailed weather report considering:
-                   - Snow accumulation and timing
-                   - Road conditions and visibility
-                   - Temperature and wind chill factors
-                   - Weather alerts and their severity
-                2. Consider multiple factors:
-                   - Student and staff safety during commute times
-                   - Building accessibility and parking lot conditions
-                   - Bus route safety and timing
-                   - Walking conditions for students
-                3. Make a clear decision with detailed reasoning
-                4. Consider both immediate and developing conditions
-                
-                Base your decision on concrete data and clear safety thresholds.
-                """,
+        # Create Blizzard Agent with detailed decision criteria and settings
+        blizzard_instructions = (
+            f"{read_prompt('blizzard.txt')}\n\n"
+            f"DISTRICT CLOSURE CRITERIA:\n{district_criteria}\n\n"
+            f"{settings_text}"
+        )
+        agent_blizzard = ChatCompletionAgent(
+            service_id="blizzard_chat",
+            kernel=blizzard_kernel,
+            name=BLIZZARD,
+            instructions=blizzard_instructions,
         )
 
-        # Create Vice Superintendent Agent with enhanced review criteria
-        agent_vice = ChatCompletionAgent(
-            service_id="vice_chat",
-            kernel=vice_kernel,
-            name=VICE_SUPERINTENDENT,
-            instructions="""
-                You are the vice superintendent reviewing snow day decisions. Your role is to:
-                1. Critically analyze the superintendent's decision considering:
-                   - All weather metrics and their trends
-                   - Historical precedents for similar conditions
-                   - Impact on academic calendar and makeup days
-                   - Community impact and expectations
-                2. Challenge assumptions and identify overlooked factors
-                3. Consider alternative solutions (delayed opening, early dismissal)
-                4. Work towards a consensus based on data and safety
-                
-                Be constructive but thorough in your analysis, always prioritizing safety.
-                """,
+        # Create Blizzard's Assistant Agent with enhanced review criteria and settings
+        assistant_instructions = (
+            f"{read_prompt('blizzard_assistant.txt')}\n\n"
+            f"DISTRICT CLOSURE CRITERIA:\n{district_criteria}\n\n"
+            f"{settings_text}"
+        )
+        agent_assistant = ChatCompletionAgent(
+            service_id="assistant_chat",
+            kernel=assistant_kernel,
+            name=BLIZZARD_ASSISTANT,
+            instructions=assistant_instructions,
         )
 
         # Create selection strategy
         selection_function = KernelFunctionFromPrompt(
             function_name="selection",
-            prompt=f"""
-            Determine which participant takes the next turn based on the conversation flow.
-            State only the name of the participant to take the next turn.
-
-            Participants:
-            - {WEATHER_AGENT}
-            - {SUPERINTENDENT}
-            - {VICE_SUPERINTENDENT}
-
-            Rules:
-            - Start with {WEATHER_AGENT}
-            - After {WEATHER_AGENT}, {SUPERINTENDENT} should analyze and decide
-            - After {SUPERINTENDENT}, {VICE_SUPERINTENDENT} should review
-            - If there's disagreement, continue the conversation between {SUPERINTENDENT} and {VICE_SUPERINTENDENT}
-            - End when both superintendents agree
-
-            History:
-            {{$history}}
-            """,
+            prompt=read_prompt("selection_strategy.txt"),
         )
 
         # Create termination strategy
         termination_function = KernelFunctionFromPrompt(
             function_name="termination",
-            prompt="""
-                Determine if the conversation should end based on these criteria:
-                1. Both superintendents have reached an agreement
-                2. A final decision has been clearly stated
-                3. All safety concerns have been addressed
-                4. Weather data has been thoroughly analyzed
-
-                Respond with 'TERMINATE' if these criteria are met.
-
-                History:
-                {{$history}}
-                """,
+            prompt=read_prompt("termination_strategy.txt"),
         )
 
-        # Create group chat
+        # Create group chat with modified termination strategy
         chat = AgentGroupChat(
-            agents=[agent_weather, agent_superintendent, agent_vice],
+            agents=[agent_weather, agent_blizzard, agent_assistant],
             selection_strategy=KernelFunctionSelectionStrategy(
                 function=selection_function,
                 kernel=selection_kernel,
-                result_parser=lambda result: str(result.value[0]) if result.value is not None else WEATHER_AGENT,
+                result_parser=lambda result: None if str(result.value[0]).upper() == 'TERMINATE' else str(result.value[0]),
                 agent_variable_name="agents",
                 history_variable_name="history",
             ),
             termination_strategy=KernelFunctionTerminationStrategy(
-                agents=[agent_superintendent, agent_vice],
+                agents=[agent_blizzard, agent_assistant],
                 function=termination_function,
                 kernel=termination_kernel,
-                result_parser=lambda result: "TERMINATE" in str(result.value[0]).upper(),
+                result_parser=lambda result: str(result.value[0]).upper() == 'TERMINATE',
                 history_variable_name="history",
-                maximum_iterations=10,
+                maximum_iterations=20,
             ),
         )
 
@@ -292,9 +360,10 @@ async def main():
         initial_prompt = (
             f"Please analyze this detailed weather data for snow day prediction:\n"
             f"Weather Data: {weather_data}\n\n"
+            f"District Snow Day Criteria:\n{district_criteria}\n\n"
             f"Consider all metrics including temperature, snow accumulation, visibility, "
             f"wind conditions, and any weather alerts. Provide a thorough analysis for "
-            f"making a snow day decision."
+            f"making a snow day decision based on the district's specific criteria."
         )
         
         conversation_data = {
@@ -314,7 +383,7 @@ async def main():
                     "content": response.content
                 })
                 # If this is the final message from a superintendent, use it as the decision
-                if response.name in [SUPERINTENDENT, VICE_SUPERINTENDENT] and chat.is_complete:
+                if response.name in [BLIZZARD, BLIZZARD_ASSISTANT] and chat.is_complete:
                     conversation_data["decision"] = response.content
 
         except Exception as e:
@@ -334,40 +403,23 @@ async def main():
 if __name__ == "__main__":
     # Configure logging
     logging.basicConfig(
-        level=logging.INFO,
-        format='%(levelname)s:%(name)s:%(message)s'
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        level=logging.INFO,  # Keep default at INFO but move routine messages to DEBUG
+        handlers=[logging.StreamHandler()]
     )
 
-    # Set more verbose loggers to WARNING level
-    logging.getLogger('semantic_kernel').setLevel(logging.WARNING)
-    logging.getLogger('httpx').setLevel(logging.WARNING)
-    logging.getLogger('openai').setLevel(logging.WARNING)
-
-    # Load and validate environment variables
-    load_dotenv(override=True)
-    time.sleep(0.1)  # Small delay to ensure environment variables are loaded
-
+    # Load environment variables
+    load_dotenv()
     openai_key = os.getenv("OPENAI_API_KEY")
-    weather_key = os.getenv("WEATHER_API_KEY")
-    model_name = os.getenv("MODEL_NAME")
+    model_name = os.getenv("MODEL_NAME", "gpt-4")
 
-    # Validate environment variables
     if not openai_key:
-        raise ValueError("OPENAI_API_KEY not found in environment variables")
-    if not openai_key.startswith('sk-'):
-        raise ValueError(f"Invalid API key format. Key should start with 'sk-', got: {openai_key[:5]}...")
-    if not weather_key:
-        raise ValueError("WEATHER_API_KEY not found in environment variables")
-    if not model_name:
-        raise ValueError("MODEL_NAME not found in environment variables")
+        logging.error("OPENAI_API_KEY not found in environment variables")
+        sys.exit(1)
 
+    # Validate API key format (first 15 chars only for security)
     logging.info(f"API key validated (first 15 chars): {openai_key[:15]}...")
     logging.info(f"Using model: {model_name}")
 
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        print("\nOperation cancelled by user")
-    except Exception as e:
-        logging.error(f"Application error: {str(e)}")
-        sys.exit(1) 
+    # Run the main async function
+    asyncio.run(main()) 

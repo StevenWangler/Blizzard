@@ -1,6 +1,6 @@
 :root {
-    --primary-color: #2c3e50;
-    --secondary-color: #3498db;
+    --primary-color: #1a1a1a;
+    --secondary-color: #ff6b00;
     --background-color: #f5f6fa;
     --panel-background: #ffffff;
     --text-color: #2c3e50;
@@ -57,6 +57,7 @@ h1 {
     padding: 15px var(--spacing);
     font-weight: bold;
     font-size: 1.2rem;
+    border-bottom: 3px solid var(--secondary-color);
 }
 
 .decision-content, .conversation-content {
@@ -69,33 +70,60 @@ h1 {
 }
 
 .message {
-    margin-bottom: 15px;
-    padding: 10px 15px;
-    border-radius: 8px;
-    background: #f8f9fa;
-    border-left: 4px solid var(--secondary-color);
+    margin-bottom: 20px;
+    padding: 15px;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid #e1e1e1;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .message.weather {
-    border-left-color: #e74c3c;
+    border-left: 4px solid #ff6b00;
 }
 
 .message.superintendent {
-    border-left-color: #2ecc71;
+    border-left: 4px solid #1a1a1a;
+    margin-left: 30px;
 }
 
 .message.vice {
-    border-left-color: #f1c40f;
+    border-left: 4px solid #666;
+    margin-left: 15px;
 }
 
 .message-header {
     font-weight: bold;
     color: var(--primary-color);
-    margin-bottom: 5px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.message-header::before {
+    content: "";
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-right: 8px;
+    border-radius: 50%;
+}
+
+.weather .message-header::before {
+    background-color: #ff6b00;
+}
+
+.superintendent .message-header::before {
+    background-color: #1a1a1a;
+}
+
+.vice .message-header::before {
+    background-color: #666;
 }
 
 .message-content {
     color: #444;
+    padding-left: 20px;
 }
 
 footer {

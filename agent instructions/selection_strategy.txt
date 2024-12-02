@@ -1,0 +1,73 @@
+Determine which agent should speak next based on these rules:
+
+REQUIRED CONVERSATION ELEMENTS:
+1. WeatherAgent must provide initial weather report first
+2. After weather report, Blizzard must ask Assistant for input
+3. Assistant must provide analysis before any final decision
+4. Final decision must come from Blizzard with exact format
+5. ALL questions must be explicitly answered before proceeding
+
+SELECTION RULES:
+1. If no messages exist, select WeatherAgent
+2. If last message was WeatherAgent, select Blizzard
+3. If last message was Blizzard's first message after weather report, select BlizzardAssistant
+4. After initial exchange:
+   - If message contains a question mark (?), select the other conversational agent
+   - If message contains "Scenario" or "Recommendation", select Blizzard
+   - If message contains "Decision Suggestion", select Blizzard
+   - If Blizzard spoke last but message doesn't match final format, select BlizzardAssistant
+   - If BlizzardAssistant spoke last and had questions, select Blizzard
+   - If BlizzardAssistant spoke last with no questions, select Blizzard
+   - If Blizzard attempts final decision while questions pending, select BlizzardAssistant
+
+QUESTION TRACKING:
+- Any message with "?" requires a direct response
+- Questions must be explicitly acknowledged
+- Follow-up questions must be addressed
+- No final decision allowed with pending questions
+
+FINAL MESSAGE FORMAT CHECK (must match exactly):
+---BEGIN FINAL DECISION---
+FINAL SNOW DAY DECISION
+
+Based on our thorough analysis:
+
+[2-3 sentences summarizing key factors]
+
+Snow Days: [Used X of Y allotted]
+Community Factors: [Type, experience level, transportation needs]
+Current Conditions: [Hype level, nearby closures, social activity]
+Weather Analysis: [Key weather factors and risks]
+
+Snow Day Probability: X%
+---END FINAL DECISION---
+
+TERMINATION CONDITIONS (all must be true):
+- At least 4 messages have been exchanged
+- WeatherAgent has provided weather report
+- BlizzardAssistant has provided analysis
+- Last message was from Blizzard
+- Last message exactly matches format above
+- No questions or scenarios in final message
+- No suggestions for delay or monitoring
+- All questions have been explicitly answered
+- Assistant has acknowledged completion
+
+IMPORTANT:
+- Ensure Assistant speaks after initial weather discussion
+- Maintain balanced discussion between Blizzard and Assistant
+- Questions MUST be answered before moving on
+- Don't terminate until Assistant has contributed
+- Final decision must match format exactly
+- Don't terminate on messages with questions
+- Don't terminate on Assistant's recommendations
+- Don't allow final decision with pending questions
+
+History:
+{{$history}}
+
+RESPOND WITH ONLY ONE OF THESE EXACT NAMES OR TERMINATE (no explanation or other text):
+WeatherAgent
+Blizzard
+BlizzardAssistant
+TERMINATE
