@@ -1,75 +1,51 @@
-Determine if the conversation should terminate based on these rules:
+TERMINATION DECISION RULES:
 
-REQUIRED SEQUENCE:
-1. WeatherAgent provides weather report
-2. Blizzard asks Assistant for input
-3. Assistant provides analysis
-4. Blizzard and Assistant discuss (may repeat)
-5. Assistant confirms all questions answered
-6. Assistant acknowledges discussion complete
-7. Blizzard makes final decision
+IF any of these are true:
+  - No messages exist
+  - Last message not from Blizzard
+  - Last message doesn't contain "FINAL SNOW DAY PREDICTION"
+  - Last message doesn't contain "Based on our probability analysis:"
+  - Last message doesn't contain "Weather-Based Probability: [number]%"
+  - Last message doesn't contain "Community Experience Factor: [number]"
+  - Last message doesn't contain "Geographic Adjustment: [number]%"
+  - Last message doesn't contain "Final Snow Day Probability: [number]%"
+  - Contains X, Y, Z, or N instead of actual numbers
+  - Assistant hasn't sent "PROBABILITY CALCULATION CONFIRMATION"
+  - Any probability calculations are missing
+  - Any questions are unanswered
+  - Contains discussion of delays/dismissals
+  - Contains non-probability recommendations
+  - Last TWO messages are from BlizzardAssistant
+  - Last message from BlizzardAssistant doesn't contain confirmation
+  - Blizzard hasn't responded after Assistant's confirmation
+THEN: RETURN "CONTINUE"
 
-REQUIRED FINAL MESSAGE FORMAT (must match exactly):
----BEGIN FINAL DECISION---
-FINAL SNOW DAY DECISION
+IF ALL of these are true:
+  - Last message is from Blizzard
+  - Previous message is from BlizzardAssistant and contains confirmation
+  - Message exactly matches this format:
+    ```
+    FINAL SNOW DAY PREDICTION
 
-Based on our thorough analysis:
+    Based on our probability analysis:
 
-[2-3 sentences summarizing key factors]
+    [2-3 sentences explaining key probability factors]
 
-Snow Days: [Used X of Y allotted]
-Community Factors: [Type, experience level, transportation needs]
-Current Conditions: [Hype level, nearby closures, social activity]
-Weather Analysis: [Key weather factors and risks]
+    Weather-Based Probability: [number]%
+    Community Experience Factor: [number]
+    Geographic Adjustment: [number]%
 
-Snow Day Probability: X%
----END FINAL DECISION---
+    Final Snow Day Probability: [number]%
+    ```
+  - All [number] fields contain actual numbers
+  - Assistant's last message contains "PROBABILITY CALCULATION CONFIRMATION"
+  - Assistant's last message contains "I confirm there are no remaining questions"
+  - All probability calculations are shown
+  - No pending questions exist
+  - No non-probability topics discussed
+THEN: RETURN "TERMINATE"
 
-DO NOT TERMINATE IF ANY OF THESE ARE TRUE:
-- Less than 4 messages exchanged
-- Assistant's last message contains questions
-- Assistant's last message contains suggestions
-- Assistant's last message contains "Decision Suggestion"
-- Assistant's last message contains "Scenario"
-- Assistant's last message contains "Recommendation"
-- Last message is not from Blizzard
-- Last message doesn't match format exactly including delimiters
-- Last message suggests waiting or monitoring
-- Last message contains questions
-- Any question in conversation remains unanswered
-- Assistant hasn't confirmed discussion complete
-- Assistant's points haven't been addressed
-- Discussion ended prematurely
-- Final decision format doesn't include delimiters
-
-ONLY TERMINATE WHEN ALL OF THESE ARE TRUE:
-- At least 4 messages exchanged
-- WeatherAgent has provided report
-- Assistant has provided analysis
-- All questions have been answered
-- All suggestions have been addressed
-- Assistant confirms discussion complete
-- Assistant acknowledges all points addressed
-- Last message is from Blizzard
-- Last message matches format exactly including delimiters
-- No pending discussion points
-- No unanswered questions remain
-- No premature termination attempted
-- Final decision includes both BEGIN and END delimiters
-
-QUESTION TRACKING:
-- Track all messages containing "?"
-- Ensure each question has a response
-- Verify responses are acknowledged
-- Confirm Assistant is satisfied
-- No open questions remain
-
-FINAL FORMAT VALIDATION:
-1. Must start with "---BEGIN FINAL DECISION---"
-2. Must contain "FINAL SNOW DAY DECISION"
-3. Must contain all required sections
-4. Must end with "---END FINAL DECISION---"
-5. No text before BEGIN or after END delimiters
+OTHERWISE: RETURN "CONTINUE"
 
 History:
 {{$history}}

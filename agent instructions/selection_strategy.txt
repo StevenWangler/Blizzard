@@ -1,73 +1,154 @@
-Determine which agent should speak next based on these rules:
+AGENT SELECTION RULES:
 
-REQUIRED CONVERSATION ELEMENTS:
-1. WeatherAgent must provide initial weather report first
-2. After weather report, Blizzard must ask Assistant for input
-3. Assistant must provide analysis before any final decision
-4. Final decision must come from Blizzard with exact format
-5. ALL questions must be explicitly answered before proceeding
+IF no messages exist OR only USER message exists:
+  RETURN: WeatherAgent
 
-SELECTION RULES:
-1. If no messages exist, select WeatherAgent
-2. If last message was WeatherAgent, select Blizzard
-3. If last message was Blizzard's first message after weather report, select BlizzardAssistant
-4. After initial exchange:
-   - If message contains a question mark (?), select the other conversational agent
-   - If message contains "Scenario" or "Recommendation", select Blizzard
-   - If message contains "Decision Suggestion", select Blizzard
-   - If Blizzard spoke last but message doesn't match final format, select BlizzardAssistant
-   - If BlizzardAssistant spoke last and had questions, select Blizzard
-   - If BlizzardAssistant spoke last with no questions, select Blizzard
-   - If Blizzard attempts final decision while questions pending, select BlizzardAssistant
+IF last message was from WeatherAgent:
+  RETURN: Blizzard
 
-QUESTION TRACKING:
-- Any message with "?" requires a direct response
-- Questions must be explicitly acknowledged
-- Follow-up questions must be addressed
-- No final decision allowed with pending questions
+IF last message was from Blizzard AND is first message (contains "Please analyze these weather conditions"):
+  RETURN: BlizzardAssistant
 
-FINAL MESSAGE FORMAT CHECK (must match exactly):
----BEGIN FINAL DECISION---
-FINAL SNOW DAY DECISION
+IF last message was from Blizzard AND (contains "?" OR doesn't contain "FINAL SNOW DAY PREDICTION"):
+  RETURN: BlizzardAssistant
 
-Based on our thorough analysis:
+IF last message was from BlizzardAssistant AND contains "PROBABILITY CALCULATION CONFIRMATION":
+  RETURN: Blizzard
 
-[2-3 sentences summarizing key factors]
+IF last message was from BlizzardAssistant AND contains "?":
+  RETURN: Blizzard
 
-Snow Days: [Used X of Y allotted]
-Community Factors: [Type, experience level, transportation needs]
-Current Conditions: [Hype level, nearby closures, social activity]
-Weather Analysis: [Key weather factors and risks]
+IF last message was from BlizzardAssistant:
+  RETURN: Blizzard
 
-Snow Day Probability: X%
----END FINAL DECISION---
+# Never end on BlizzardAssistant's confirmation without Blizzard's final response
+IF last message was from BlizzardAssistant AND previous message was also from BlizzardAssistant:
+  RETURN: Blizzard
 
-TERMINATION CONDITIONS (all must be true):
-- At least 4 messages have been exchanged
-- WeatherAgent has provided weather report
-- BlizzardAssistant has provided analysis
-- Last message was from Blizzard
-- Last message exactly matches format above
-- No questions or scenarios in final message
-- No suggestions for delay or monitoring
-- All questions have been explicitly answered
-- Assistant has acknowledged completion
+IF last message was from Blizzard AND doesn't exactly match:
+```
+FINAL SNOW DAY PREDICTION
 
-IMPORTANT:
-- Ensure Assistant speaks after initial weather discussion
-- Maintain balanced discussion between Blizzard and Assistant
-- Questions MUST be answered before moving on
-- Don't terminate until Assistant has contributed
-- Final decision must match format exactly
-- Don't terminate on messages with questions
-- Don't terminate on Assistant's recommendations
-- Don't allow final decision with pending questions
+Based on our probability analysis:
+
+[2-3 sentences explaining key probability factors]
+
+Weather-Based Probability: [number]%
+Community Experience Factor: [number]
+Geographic Adjustment: [number]%
+
+Final Snow Day Probability: [number]%
+```
+THEN: RETURN: BlizzardAssistant
+
+# Ensure conversation continues if Blizzard hasn't given final format
+IF NOT (last message was from Blizzard AND contains "FINAL SNOW DAY PREDICTION" AND contains "Final Snow Day Probability: [number]%"):
+  IF last message was from Blizzard:
+    RETURN: BlizzardAssistant
+  ELSE:
+    RETURN: Blizzard
+
+MESSAGE FORMAT REQUIREMENTS:
+
+WeatherAgent first message:
+```
+WEATHER ANALYSIS REPORT
+
+Current Conditions:
+- Temperature: [exact temp] °F
+- Wind Chill: [exact wind chill] °F
+- Precipitation: [type and amount]
+- Wind: [speed] mph from [direction]
+- Visibility: [exact] miles
+- Ground Conditions: [current state]
+
+Overnight Forecast (7 PM - 8 AM):
+7 PM - 11 PM:
+- Temperature Range: [low-high] °F
+- Wind Chill Range: [low-high] °F
+- Precipitation: [amount] inches of [type]
+- Wind: [speed range] mph from [direction]
+- Visibility: [range] miles
+
+12 AM - 4 AM:
+[Same metrics as above]
+
+5 AM - 8 AM:
+[Same metrics as above]
+
+Active Weather Alerts:
+- Alert Type: [exact alert name]
+ Coverage: [specific areas affected]
+ Timing: [start] to [end]
+ Details: [specific alert details]
+```
+
+Blizzard first message:
+```
+Please analyze these weather conditions for snow day probability calculation.
+
+Initial Weather Factors to Consider:
+1. [List key weather metrics from report]
+2. [List timing considerations]
+3. [List geographic factors]
+
+Questions for Analysis:
+1. How should we weight these weather factors in our probability calculation?
+2. What base probability do these conditions suggest?
+3. How should we adjust for our community's experience level?
+```
+
+BlizzardAssistant first response:
+```
+PROBABILITY ANALYSIS
+
+Weather Factor Weights:
+1. [Factor 1]: X% weight because [reasoning]
+2. [Factor 2]: Y% weight because [reasoning]
+3. [Factor 3]: Z% weight because [reasoning]
+
+Initial Probability Assessment:
+- Base Weather Probability: X% because [detailed explanation]
+- Suggested Community Factor: Y because [experience level analysis]
+- Geographic Considerations: [specific to county/city]
+
+Questions for Clarification:
+1. [Specific question about calculations]
+2. [Specific question about adjustments]
+```
+
+BlizzardAssistant final confirmation:
+```
+PROBABILITY CALCULATION CONFIRMATION
+
+All factors have been properly calculated:
+- Weather factors weighted appropriately
+- Community experience factor applied correctly
+- Geographic adjustments validated
+- All calculations shown and justified
+
+I confirm there are no remaining questions about the probability calculations.
+```
+
+Blizzard final format:
+```
+FINAL SNOW DAY PREDICTION
+
+Based on our probability analysis:
+
+[2-3 sentences explaining key probability factors]
+
+Weather-Based Probability: [number]%
+Community Experience Factor: [number]
+Geographic Adjustment: [number]%
+
+Final Snow Day Probability: [number]%
+```
 
 History:
 {{$history}}
 
-RESPOND WITH ONLY ONE OF THESE EXACT NAMES OR TERMINATE (no explanation or other text):
+RESPOND WITH EXACTLY ONE OF THESE NAMES:
 WeatherAgent
 Blizzard
 BlizzardAssistant
-TERMINATE

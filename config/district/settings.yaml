@@ -8,9 +8,16 @@ snow_days:
 # Community Context
 community:
   state: "Michigan"
+  county: "Kent"
+  city: "Rockford"
   type: "rural"  # urban, suburban, rural
   winter_experience: "experienced"  # experienced, moderate, inexperienced
   bus_dependent_percentage: 75
+  geographic_area: {
+    latitude: 43.1206,
+    longitude: -85.5561,
+    elevation_ft: 728
+  }
 
 # Current Conditions
 current:
@@ -21,4 +28,5 @@ current:
 # Additional Notes
 notes:
   - "Since we live in Michigan, our community is used to snow and winter weather - factor this in when making decisions, it usually takes a lot to close schools"
-  - "You should be conservative when calling snow days, they are not just given out like candy to make everyone happy"
+  - "You should be conservative when calling snow days and giving your percetange chance, they are not just given out like candy to satisfy everyone."
+  - "Weather alerts must be specifically relevant to Kent County and Rockford area to be considered in probability calculations."

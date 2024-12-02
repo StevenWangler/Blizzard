@@ -86,7 +86,9 @@ class RateLimitedOpenAIChatCompletion(OpenAIChatCompletion):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._last_request_time = 0
-        self._min_request_interval = 1.0
+        self._min_request_interval = 2.0
+        self._backoff_factor = 2
+        self._max_backoff = 30
 
     async def _send_completion_request(self, settings):
         """
@@ -107,15 +109,16 @@ class RateLimitedOpenAIChatCompletion(OpenAIChatCompletion):
         if time_since_last_request < self._min_request_interval:
             await asyncio.sleep(self._min_request_interval - time_since_last_request)
         
+        backoff = self._min_request_interval
         for attempt in range(MAX_RETRIES):
             try:
                 self._last_request_time = time.time()
                 return await super()._send_completion_request(settings)
             except Exception as e:
                 if "rate" in str(e).lower() and attempt < MAX_RETRIES - 1:
-                    wait_time = RETRY_DELAY * (2 ** attempt)
-                    logging.debug(f"Rate limit hit, waiting {wait_time} seconds before retry...")
-                    await asyncio.sleep(wait_time)
+                    backoff = min(backoff * self._backoff_factor, self._max_backoff)
+                    logging.info(f"Rate limit hit, waiting {backoff} seconds before retry...")
+                    await asyncio.sleep(backoff)
                     continue
                 raise
 
@@ -317,11 +320,23 @@ async def main():
             instructions=assistant_instructions,
         )
 
-        # Create selection strategy
+        # Create selection strategy with modified result parser
         selection_function = KernelFunctionFromPrompt(
             function_name="selection",
             prompt=read_prompt("selection_strategy.txt"),
         )
+
+        def selection_parser(result):
+            """Parse the selection strategy result, handling TERMINATE gracefully"""
+            result_str = str(result.value[0]).strip()
+            
+            if result_str.upper() in ['TERMINATE', 'NONE', '']:
+                # Return the last agent who spoke to give them a chance to conclude
+                return chat.history.messages[-1].name if chat.history.messages else None
+            
+            # Find the matching agent by name (case-insensitive)
+            agent_map = {agent.name.upper(): agent.name for agent in chat.agents}
+            return agent_map.get(result_str.upper())
 
         # Create termination strategy
         termination_function = KernelFunctionFromPrompt(
@@ -329,18 +344,18 @@ async def main():
             prompt=read_prompt("termination_strategy.txt"),
         )
 
-        # Create group chat with modified termination strategy
+        # Create group chat with modified selection strategy
         chat = AgentGroupChat(
             agents=[agent_weather, agent_blizzard, agent_assistant],
             selection_strategy=KernelFunctionSelectionStrategy(
                 function=selection_function,
                 kernel=selection_kernel,
-                result_parser=lambda result: None if str(result.value[0]).upper() == 'TERMINATE' else str(result.value[0]),
+                result_parser=selection_parser,  # Use our new parser
                 agent_variable_name="agents",
                 history_variable_name="history",
             ),
             termination_strategy=KernelFunctionTerminationStrategy(
-                agents=[agent_blizzard, agent_assistant],
+                agents=[agent_weather, agent_blizzard, agent_assistant],
                 function=termination_function,
                 kernel=termination_kernel,
                 result_parser=lambda result: str(result.value[0]).upper() == 'TERMINATE',
@@ -356,23 +371,23 @@ async def main():
             logging.error("Failed to fetch weather data")
             return
 
+        # Prepare the initial weather analysis request
         weather_data = get_relevant_weather_information(forecast_data)
         initial_prompt = (
-            f"Please analyze this detailed weather data for snow day prediction:\n"
+            f"Please provide a detailed weather report for the following data.\n\n"
             f"Weather Data: {weather_data}\n\n"
-            f"District Snow Day Criteria:\n{district_criteria}\n\n"
-            f"Consider all metrics including temperature, snow accumulation, visibility, "
-            f"wind conditions, and any weather alerts. Provide a thorough analysis for "
-            f"making a snow day decision based on the district's specific criteria."
+            f"Focus ONLY on reporting the weather conditions. DO NOT make any predictions or analysis about snow days."
         )
-        
+
+        # Start the conversation with the initial prompt
+        await chat.add_chat_message(ChatMessageContent(role=AuthorRole.USER, content=initial_prompt))
+
+        # Initialize conversation data
         conversation_data = {
             "timestamp": datetime.now().isoformat(),
             "conversation": [],
             "decision": None
         }
-
-        await chat.add_chat_message(ChatMessageContent(role=AuthorRole.USER, content=initial_prompt))
 
         try:
             async for response in chat.invoke():

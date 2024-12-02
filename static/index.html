@@ -3,37 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snow Day Predictor</title>
+    <meta name="description" content="Predict snow days for Rockford Public Schools (Michigan) using AI-powered analysis">
+    <meta name="theme-color" content="#ffffff">
+    <meta property="og:title" content="Snow Day Predictor - Rockford Public Schools">
+    <meta property="og:description" content="AI-powered snow day predictions for Rockford Public Schools, Michigan">
+    <meta property="og:type" content="website">
+    
+    <title>Snow Day Predictor | Rockford Public Schools</title>
+    
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="preload" href="styles.css" as="style">
     <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>Blizzard - Rockford Public Schools (Michigan) Snow Day Predictor</h1>
-            <div class="last-updated">Last updated: <span id="updateTime"></span></div>
+        <header role="banner">
+            <h1>Blizzard - Rockford Public Schools Snow Day Predictor</h1>
+            <div class="last-updated" aria-live="polite">Last updated: <time id="updateTime"></time></div>
         </header>
 
-        <main>
-            <div class="decision-panel">
-                <div class="decision-header">Final Decision</div>
-                <div id="finalDecision" class="decision-content markdown-content">
+        <main role="main">
+            <section class="decision-panel" aria-labelledby="decision-header">
+                <h2 id="decision-header" class="decision-header">Final Decision</h2>
+                <div id="finalDecision" class="decision-content markdown-content" aria-live="polite">
                     <!-- Decision will be inserted here -->
                 </div>
-            </div>
+            </section>
 
-            <div class="conversation-panel">
-                <div class="conversation-header">Agent Discussion</div>
-                <div id="conversation" class="conversation-content">
+            <section class="conversation-panel" aria-labelledby="conversation-header">
+                <h2 id="conversation-header" class="conversation-header">Agent Discussion</h2>
+                <div id="conversation" class="conversation-content" aria-live="polite">
                     <!-- Conversation will be inserted here -->
                 </div>
-            </div>
+            </section>
         </main>
 
-        <footer>
+        <footer role="contentinfo">
             <p>Powered by AI - Updated daily</p>
         </footer>
     </div>
-    <script src="script.js"></script>
+    <script src="script.js" defer></script>
 </body>
 </html> 
