@@ -26,17 +26,17 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
           ZIP_CODE: ${{ secrets.ZIP_CODE }}
-          MODEL_NAME: ${{ secrets.MODEL_NAME }}
-          WEATHER_MODEL: ${{ secrets.WEATHER_MODEL }}
-          BLIZZARD_MODEL: ${{ secrets.BLIZZARD_MODEL }}
-          ASSISTANT_MODEL: ${{ secrets.ASSISTANT_MODEL }}
-          SELECTION_MODEL: ${{ secrets.SELECTION_MODEL }}
-          TERMINATION_MODEL: ${{ secrets.TERMINATION_MODEL }}
+          MODEL_NAME: ${{ vars.MODEL_NAME }}
+          WEATHER_MODEL: ${{ vars.WEATHER_MODEL }}
+          BLIZZARD_MODEL: ${{ vars.BLIZZARD_MODEL }}
+          ASSISTANT_MODEL: ${{ vars.ASSISTANT_MODEL }}
+          SELECTION_MODEL: ${{ vars.SELECTION_MODEL }}
+          TERMINATION_MODEL: ${{ vars.TERMINATION_MODEL }}
         run: python main.py
         
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./static  # Adjust this to your static site directory
-          force_orphan: true 
+          publish_dir: ./static
+          force_orphan: true
