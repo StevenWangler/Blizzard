@@ -100,10 +100,36 @@ python -m http.server --directory static
 
 ### GitHub Pages Deployment
 
-1. Fork this repository
-2. Enable GitHub Pages in your repository settings
-3. Configure GitHub Actions to run main.py daily
-4. Point GitHub Pages to the `static/` directory
+The project is set up to automatically deploy to GitHub Pages using GitHub Actions. Here's how to set it up:
+
+1. In your repository settings:
+   - Go to "Settings" > "Pages"
+   - Under "Build and deployment", select "GitHub Actions" as the source
+
+2. Set up required secrets in your repository:
+   - Go to "Settings" > "Secrets and variables" > "Actions"
+   - Add these secrets:
+     - `OPENAI_API_KEY`: Your OpenAI API key
+     - `WEATHER_API_KEY`: Your WeatherAPI key
+     - `ZIP_CODE`: Your target ZIP code
+
+3. Set up model variables (optional):
+   - In the same section, go to the "Variables" tab
+   - Add these variables if you want to customize the models:
+     - `MODEL_NAME`
+     - `WEATHER_MODEL`
+     - `BLIZZARD_MODEL`
+     - `ASSISTANT_MODEL`
+     - `SELECTION_MODEL`
+     - `TERMINATION_MODEL`
+
+4. The workflow will:
+   - Run automatically at 8PM EST daily
+   - Update the weather data and predictions
+   - Deploy to GitHub Pages
+   - You can also trigger it manually from the Actions tab
+
+Your site will be available at: `https://[your-username].github.io/[repository-name]/`
 
 ## Configuration
 
