@@ -4,47 +4,45 @@ IF no messages exist OR only USER message exists:
   RETURN: WeatherAgent
 
 IF last message was from WeatherAgent:
+  RETURN: SnowResearchLead
+
+IF last message was from SnowResearchLead AND is first message (contains "Please analyze these weather conditions"):
+  RETURN: ResearchAssistant
+
+IF last message was from SnowResearchLead AND (contains "?" OR doesn't contain "Initial Analysis Complete"):
+  RETURN: ResearchAssistant
+
+IF last message was from ResearchAssistant AND contains "Analysis Validation Complete":
   RETURN: Blizzard
 
-IF last message was from Blizzard AND is first message (contains "Please analyze these weather conditions"):
-  RETURN: BlizzardAssistant
+IF last message was from ResearchAssistant AND contains "?":
+  RETURN: SnowResearchLead
 
-IF last message was from Blizzard AND (contains "?" OR doesn't contain "FINAL SNOW DAY PREDICTION"):
-  RETURN: BlizzardAssistant
-
-IF last message was from BlizzardAssistant AND contains "PROBABILITY CALCULATION CONFIRMATION":
+IF last message was from ResearchAssistant:
   RETURN: Blizzard
 
-IF last message was from BlizzardAssistant AND contains "?":
-  RETURN: Blizzard
-
-IF last message was from BlizzardAssistant:
-  RETURN: Blizzard
-
-# Never end on BlizzardAssistant's confirmation without Blizzard's final response
-IF last message was from BlizzardAssistant AND previous message was also from BlizzardAssistant:
+# Never end on ResearchAssistant's validation without Blizzard's final verdict
+IF last message was from ResearchAssistant AND previous message was also from ResearchAssistant:
   RETURN: Blizzard
 
 IF last message was from Blizzard AND doesn't exactly match:
 ```
-FINAL SNOW DAY PREDICTION
+SNOW DAY VERDICT: [YES/NO]
+CONFIDENCE: [X]%
+KEY FACTORS:
+1. [Primary reason]
+2. [Secondary reason]
+3. [Additional significant factor]
 
-Based on our probability analysis:
-
-[2-3 sentences explaining key probability factors]
-
-Weather-Based Probability: [number]%
-Community Experience Factor: [number]
-Geographic Adjustment: [number]%
-
-Final Snow Day Probability: [number]%
+BRIEF EXPLANATION:
+[2-3 sentences summarizing reasoning]
 ```
-THEN: RETURN: BlizzardAssistant
+THEN: RETURN: ResearchAssistant
 
 # Ensure conversation continues if Blizzard hasn't given final format
-IF NOT (last message was from Blizzard AND contains "FINAL SNOW DAY PREDICTION" AND contains "Final Snow Day Probability: [number]%"):
+IF NOT (last message was from Blizzard AND contains "SNOW DAY VERDICT" AND contains "CONFIDENCE"):
   IF last message was from Blizzard:
-    RETURN: BlizzardAssistant
+    RETURN: ResearchAssistant
   ELSE:
     RETURN: Blizzard
 
@@ -83,66 +81,57 @@ Active Weather Alerts:
  Details: [specific alert details]
 ```
 
-Blizzard first message:
+SnowResearchLead first message:
 ```
-Please analyze these weather conditions for snow day probability calculation.
+INITIAL WEATHER ANALYSIS
 
-Initial Weather Factors to Consider:
-1. [List key weather metrics from report]
-2. [List timing considerations]
-3. [List geographic factors]
+Weather Factors Analysis:
+1. [Detailed analysis of temperature impact]
+2. [Detailed analysis of precipitation]
+3. [Detailed analysis of road conditions]
+4. [Detailed analysis of timing]
 
-Questions for Analysis:
-1. How should we weight these weather factors in our probability calculation?
-2. What base probability do these conditions suggest?
-3. How should we adjust for our community's experience level?
-```
+Safety Considerations:
+1. [Transportation safety analysis]
+2. [Facility operations analysis]
+3. [Student/staff safety factors]
 
-BlizzardAssistant first response:
-```
-PROBABILITY ANALYSIS
+Community Context:
+1. [Analysis of community preparedness]
+2. [Historical precedent analysis]
+3. [Geographic considerations]
 
-Weather Factor Weights:
-1. [Factor 1]: X% weight because [reasoning]
-2. [Factor 2]: Y% weight because [reasoning]
-3. [Factor 3]: Z% weight because [reasoning]
-
-Initial Probability Assessment:
-- Base Weather Probability: X% because [detailed explanation]
-- Suggested Community Factor: Y because [experience level analysis]
-- Geographic Considerations: [specific to county/city]
-
-Questions for Clarification:
-1. [Specific question about calculations]
-2. [Specific question about adjustments]
+Initial Analysis Complete
 ```
 
-BlizzardAssistant final confirmation:
+ResearchAssistant validation response:
 ```
-PROBABILITY CALCULATION CONFIRMATION
+ANALYSIS VALIDATION
 
-All factors have been properly calculated:
-- Weather factors weighted appropriately
-- Community experience factor applied correctly
-- Geographic adjustments validated
-- All calculations shown and justified
+Verification of Key Points:
+1. Weather Data Interpretation: [Confirmation/Corrections]
+2. Safety Assessment: [Validation/Additional Concerns]
+3. Community Context: [Verification/Missing Factors]
 
-I confirm there are no remaining questions about the probability calculations.
+Additional Considerations:
+1. [Overlooked factor]
+2. [Important context]
+3. [Risk assessment]
+
+Analysis Validation Complete
 ```
 
 Blizzard final format:
 ```
-FINAL SNOW DAY PREDICTION
+SNOW DAY VERDICT: [YES/NO]
+CONFIDENCE: [X]%
+KEY FACTORS:
+1. [Primary reason]
+2. [Secondary reason]
+3. [Additional significant factor]
 
-Based on our probability analysis:
-
-[2-3 sentences explaining key probability factors]
-
-Weather-Based Probability: [number]%
-Community Experience Factor: [number]
-Geographic Adjustment: [number]%
-
-Final Snow Day Probability: [number]%
+BRIEF EXPLANATION:
+[2-3 sentences summarizing reasoning]
 ```
 
 History:
@@ -150,5 +139,6 @@ History:
 
 RESPOND WITH EXACTLY ONE OF THESE NAMES:
 WeatherAgent
+SnowResearchLead
+ResearchAssistant
 Blizzard
-BlizzardAssistant

@@ -6,10 +6,11 @@ and simulating a decision-making process between school administrators. It uses 
 Semantic Kernel framework to coordinate multiple AI agents that analyze weather data
 and make collaborative decisions.
 
-The system consists of three main agents:
+The system consists of four main agents:
 1. Weather Agent: Analyzes weather conditions and provides detailed reports
-2. Blizzard: Makes initial snow day decisions based on weather analysis
-3. Blizzard's Assistant: Reviews and validates decisions
+2. Snow Research Lead: Makes initial snow day analysis based on weather data
+3. Research Assistant: Reviews and validates analysis
+4. Blizzard: Final decision maker who reports the verdict with confidence percentage
 
 The agents communicate through a structured chat system, with their conversation
 and final decision being saved to a JSON file for web display.
@@ -49,8 +50,9 @@ from weather.weather_data import WeatherAPI, get_relevant_weather_information
 
 # Constants
 WEATHER_AGENT = "WeatherAgent"
+SNOW_RESEARCH_LEAD = "SnowResearchLead"
+RESEARCH_ASSISTANT = "ResearchAssistant"
 BLIZZARD = "Blizzard"
-BLIZZARD_ASSISTANT = "BlizzardAssistant"
 MAX_RETRIES = 5
 RETRY_DELAY = 1  # seconds
 REQUEST_TIMEOUT = 30  # seconds
@@ -281,8 +283,9 @@ async def main():
         
         # Create separate kernels for each agent with specific models
         weather_kernel = _create_kernel_with_chat_service("weather_chat", os.getenv("WEATHER_MODEL"))
+        research_lead_kernel = _create_kernel_with_chat_service("research_lead_chat", os.getenv("BLIZZARD_MODEL"))
+        research_assistant_kernel = _create_kernel_with_chat_service("research_assistant_chat", os.getenv("ASSISTANT_MODEL"))
         blizzard_kernel = _create_kernel_with_chat_service("blizzard_chat", os.getenv("BLIZZARD_MODEL"))
-        assistant_kernel = _create_kernel_with_chat_service("assistant_chat", os.getenv("ASSISTANT_MODEL"))
         selection_kernel = _create_kernel_with_chat_service("selection_chat", os.getenv("SELECTION_MODEL"))
         termination_kernel = _create_kernel_with_chat_service("termination_chat", os.getenv("TERMINATION_MODEL"))
 
@@ -294,9 +297,35 @@ async def main():
             instructions=read_prompt("weather_agent.txt"),
         )
 
-        # Create Blizzard Agent with detailed decision criteria and settings
+        # Create Snow Research Lead Agent with detailed analysis criteria and settings
+        research_lead_instructions = (
+            f"{read_prompt('snow_research_lead.txt')}\n\n"
+            f"DISTRICT CLOSURE CRITERIA:\n{district_criteria}\n\n"
+            f"{settings_text}"
+        )
+        agent_research_lead = ChatCompletionAgent(
+            service_id="research_lead_chat",
+            kernel=research_lead_kernel,
+            name=SNOW_RESEARCH_LEAD,
+            instructions=research_lead_instructions,
+        )
+
+        # Create Research Assistant Agent with enhanced review criteria and settings
+        research_assistant_instructions = (
+            f"{read_prompt('research_assistant.txt')}\n\n"
+            f"DISTRICT CLOSURE CRITERIA:\n{district_criteria}\n\n"
+            f"{settings_text}"
+        )
+        agent_research_assistant = ChatCompletionAgent(
+            service_id="research_assistant_chat",
+            kernel=research_assistant_kernel,
+            name=RESEARCH_ASSISTANT,
+            instructions=research_assistant_instructions,
+        )
+
+        # Create Blizzard Reporter Agent for final verdict
         blizzard_instructions = (
-            f"{read_prompt('blizzard.txt')}\n\n"
+            f"{read_prompt('blizzard_reporter.txt')}\n\n"
             f"DISTRICT CLOSURE CRITERIA:\n{district_criteria}\n\n"
             f"{settings_text}"
         )
@@ -305,19 +334,6 @@ async def main():
             kernel=blizzard_kernel,
             name=BLIZZARD,
             instructions=blizzard_instructions,
-        )
-
-        # Create Blizzard's Assistant Agent with enhanced review criteria and settings
-        assistant_instructions = (
-            f"{read_prompt('blizzard_assistant.txt')}\n\n"
-            f"DISTRICT CLOSURE CRITERIA:\n{district_criteria}\n\n"
-            f"{settings_text}"
-        )
-        agent_assistant = ChatCompletionAgent(
-            service_id="assistant_chat",
-            kernel=assistant_kernel,
-            name=BLIZZARD_ASSISTANT,
-            instructions=assistant_instructions,
         )
 
         # Create selection strategy with modified result parser
@@ -346,16 +362,16 @@ async def main():
 
         # Create group chat with modified selection strategy
         chat = AgentGroupChat(
-            agents=[agent_weather, agent_blizzard, agent_assistant],
+            agents=[agent_weather, agent_research_lead, agent_research_assistant, agent_blizzard],
             selection_strategy=KernelFunctionSelectionStrategy(
                 function=selection_function,
                 kernel=selection_kernel,
-                result_parser=selection_parser,  # Use our new parser
+                result_parser=selection_parser,
                 agent_variable_name="agents",
                 history_variable_name="history",
             ),
             termination_strategy=KernelFunctionTerminationStrategy(
-                agents=[agent_weather, agent_blizzard, agent_assistant],
+                agents=[agent_weather, agent_research_lead, agent_research_assistant, agent_blizzard],
                 function=termination_function,
                 kernel=termination_kernel,
                 result_parser=lambda result: str(result.value[0]).upper() == 'TERMINATE',
@@ -397,8 +413,8 @@ async def main():
                     "name": response.name,
                     "content": response.content
                 })
-                # If this is the final message from a superintendent, use it as the decision
-                if response.name in [BLIZZARD, BLIZZARD_ASSISTANT] and chat.is_complete:
+                # Only use Blizzard's final verdict as the decision
+                if response.name == BLIZZARD and "SNOW DAY VERDICT" in response.content:
                     conversation_data["decision"] = response.content
 
         except Exception as e:
