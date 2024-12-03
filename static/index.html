@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="Predict snow days for Rockford Public Schools (Michigan) using AI-powered analysis">
-    <meta name="theme-color" content="#ffffff">
+    <meta name="theme-color" content="#2c3e50">
     <meta property="og:title" content="Snow Day Predictor - Rockford Public Schools">
     <meta property="og:description" content="AI-powered snow day predictions for Rockford Public Schools, Michigan">
     <meta property="og:type" content="website">
     
-    <title>Snow Day Predictor | Rockford Public Schools</title>
+    <title>Blizzard | Rockford Public Schools</title>
     
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="preload" href="styles.css" as="style">
@@ -17,30 +17,50 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
 </head>
 <body>
+    <nav class="navbar" role="navigation">
+        <ul class="nav-links">
+            <li><a href="index.html" class="active">Prediction</a></li>
+            <li><a href="about.html">About</a></li>
+        </ul>
+        <button class="theme-toggle" aria-label="Toggle theme" title="Toggle light/dark mode">
+            <span id="themeIcon">🌙</span>
+        </button>
+    </nav>
     <div class="container">
-        <header role="banner">
-            <h1>Blizzard - Rockford Public Schools Snow Day Predictor</h1>
-            <div class="last-updated" aria-live="polite">Last updated: <time id="updateTime"></time></div>
+        <header role="banner" class="site-header">
+            <div class="header-content">
+                <h1>Blizzard</h1>
+                <div class="header-meta">
+                    <div class="subtitle">Rockford Public Schools</div>
+                    <div class="last-updated" aria-live="polite">
+                        <span>Updated</span> <time id="updateTime"></time>
+                    </div>
+                </div>
+            </div>
         </header>
 
         <main role="main">
             <section class="decision-panel" aria-labelledby="decision-header">
-                <h2 id="decision-header" class="decision-header">Final Decision</h2>
+                <h2 id="decision-header" class="decision-header">Prediction</h2>
                 <div id="finalDecision" class="decision-content markdown-content" aria-live="polite">
                     <!-- Decision will be inserted here -->
                 </div>
             </section>
 
             <section class="conversation-panel" aria-labelledby="conversation-header">
-                <h2 id="conversation-header" class="conversation-header">Agent Discussion</h2>
-                <div id="conversation" class="conversation-content" aria-live="polite">
-                    <!-- Conversation will be inserted here -->
-                </div>
+                <h2 id="conversation-header" class="conversation-header">Analysis Details</h2>
+                <div class="conversation-info">Tap to expand detailed analysis from our weather and research team.</div>
+                <details>
+                    <summary>Show Analysis</summary>
+                    <div id="conversation" class="conversation-content" aria-live="polite">
+                        <!-- Conversation will be inserted here -->
+                    </div>
+                </details>
             </section>
         </main>
 
         <footer role="contentinfo">
-            <p>Powered by AI - Updated daily</p>
+            <p>Powered by AI • Updated daily</p>
         </footer>
     </div>
     <script src="script.js" defer></script>
