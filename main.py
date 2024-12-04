@@ -260,46 +260,81 @@ def format_settings_for_agents(settings):
 def get_history_file():
     """Get the appropriate history file path based on environment."""
     env = os.getenv('BLIZZARD_ENV', 'development')  # Default to development if not set
-    logging.info(f"Running in {env} environment")
-    return "static/history.json" if env == 'production' else "static/history_local.json"
+    history_file = "static/history.json" if env == 'production' else "static/history_local.json"
+    
+    # Ensure the static directory exists
+    os.makedirs("static", exist_ok=True)
+    
+    # Create the file if it doesn't exist
+    if not os.path.exists(history_file):
+        with open(history_file, 'w') as f:
+            json.dump({"predictions": []}, f)
+    
+    logging.info(f"Using history file: {history_file}")
+    return history_file
 
 def update_history(data):
     """Update history.json with the latest prediction."""
     history_file = get_history_file()
     try:
+        # Ensure we have a decision before updating history
+        if not data.get("decision"):
+            logging.error("No decision found in data, skipping history update")
+            return
+
         # Create or read history file
         history = {"predictions": []}
         if os.path.exists(history_file) and os.path.getsize(history_file) > 0:
             try:
                 with open(history_file, "r") as f:
                     history = json.load(f)
-                    if not isinstance(history, dict) or "predictions" not in history:
-                        history = {"predictions": []}
-            except json.JSONDecodeError:
-                # If file is invalid JSON, start fresh
-                history = {"predictions": []}
+            except json.JSONDecodeError as e:
+                logging.error(f"Invalid JSON in history file: {e}")
+                # Backup the corrupted file
+                backup_file = f"{history_file}.backup.{int(time.time())}"
+                os.rename(history_file, backup_file)
+                logging.info(f"Backed up corrupted history file to {backup_file}")
 
         # Create new prediction entry
+        prediction_date = datetime.now().strftime("%Y-%m-%d")
+        
+        # Check for existing prediction for today
+        existing_prediction = next(
+            (p for p in history["predictions"] if p["id"] == prediction_date),
+            None
+        )
+        
         new_prediction = {
-            "id": datetime.now().strftime("%Y-%m-%d"),
+            "id": prediction_date,
             "timestamp": data["timestamp"],
             "prediction": data["decision"],
             "actual": None,
-            "details": data["conversation"][-1]["content"]  # Last Blizzard message
+            "details": data["conversation"][-1]["content"] if data["conversation"] else "No details available"
         }
 
-        # Add new prediction to history
-        if not isinstance(history.get("predictions"), list):
-            history["predictions"] = []
-        history["predictions"].insert(0, new_prediction)  # Add at the beginning
+        if existing_prediction:
+            # Update existing prediction
+            existing_idx = history["predictions"].index(existing_prediction)
+            history["predictions"][existing_idx] = new_prediction
+            logging.info(f"Updated existing prediction for {prediction_date}")
+        else:
+            # Add new prediction at the beginning
+            history["predictions"].insert(0, new_prediction)
+            logging.info(f"Added new prediction for {prediction_date}")
 
         # Write updated history
         with open(history_file, "w") as f:
             json.dump(history, f, indent=4)
 
         logging.info(f"Successfully updated {history_file}")
+        
+        # Verify the file was written correctly
+        if os.path.getsize(history_file) == 0:
+            raise Exception("History file is empty after writing")
+            
     except Exception as e:
         logging.error(f"Error updating {history_file}: {str(e)}")
+        raise
 
 def inject_environment_into_html():
     """Inject the current environment into HTML files."""
@@ -492,7 +527,10 @@ async def main():
             json.dump(conversation_data, f, indent=2)
 
         # Update history.json with the latest prediction
-        update_history(conversation_data)
+        if conversation_data.get("decision"):
+            update_history(conversation_data)
+        else:
+            logging.error("No decision found in conversation data")
 
         # After generating predictions, inject environment
         inject_environment_into_html()

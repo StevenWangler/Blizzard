@@ -2,11 +2,12 @@ name: Deploy Static Site
 
 on:
   schedule:
-    - cron: '0 1 * * *'  # Runs at 8PM Eastern (1AM UTC)
+    - cron: '0 1 * * *'  # Runs at 8PM EST (1AM UTC)
+    # Update to '0 0 * * *' during DST to run at 8PM EDT (0AM UTC next day)
   workflow_dispatch:  # Allows manual triggering
 
 permissions:
-  contents: read
+  contents: write  # Changed to write to allow committing
   pages: write
   id-token: write
 
@@ -15,6 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Fetch all history
       
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -39,6 +42,13 @@ jobs:
           TERMINATION_MODEL: ${{ vars.TERMINATION_MODEL }}
           BLIZZARD_ENV: 'production'
         run: python main.py
+
+      - name: Commit and push if changed
+        run: |
+          git config --global user.name 'GitHub Actions Bot'
+          git config --global user.email 'actions@github.com'
+          git add static/history.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update history.json" && git push)
 
       - name: Setup Pages
         uses: actions/configure-pages@v3
