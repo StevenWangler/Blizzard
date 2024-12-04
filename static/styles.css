@@ -530,4 +530,120 @@ section {
 
 .about-panel .decision-content h3:first-child {
     margin-top: 0;
+}
+
+/* History Table Styles */
+.history-panel {
+    background: var(--surface-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    box-shadow: var(--shadow);
+}
+
+.table-container {
+    overflow-x: auto;
+    margin: 1rem 0;
+    border-radius: 8px;
+    background: var(--background-color);
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    text-align: left;
+}
+
+.history-table th,
+.history-table td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.history-table th {
+    font-weight: 600;
+    background: var(--surface-color);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.history-table th:first-child {
+    border-top-left-radius: 8px;
+}
+
+.history-table th:last-child {
+    border-top-right-radius: 8px;
+}
+
+.history-table tr:last-child td {
+    border-bottom: none;
+}
+
+.history-table tr:hover {
+    background: var(--surface-color-hover);
+}
+
+.history-table td:nth-child(2),
+.history-table td:nth-child(3) {
+    font-weight: 500;
+}
+
+/* Style for prediction status */
+.history-table td:nth-child(2) {
+    color: var(--accent-color);
+}
+
+/* Style for actual outcome */
+.history-table td:nth-child(3) {
+    color: var(--text-color);
+}
+
+.history-table td:nth-child(3):contains('Pending') {
+    color: var(--text-color-muted);
+    font-style: italic;
+}
+
+.details-button {
+    background: var(--accent-color);
+    color: var(--text-on-accent);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s ease;
+    width: 100%;
+    max-width: 120px;
+}
+
+.details-button:hover {
+    background: var(--accent-color-hover);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .history-table th,
+    .history-table td {
+        padding: 0.75rem;
+    }
+    
+    .details-button {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+    }
+}
+
+/* Empty state and error messages */
+.history-table .empty-message,
+.history-table .error-message {
+    text-align: center;
+    color: var(--text-color-muted);
+    font-style: italic;
+    padding: 2rem !important;
+}
+
+.history-table .error-message {
+    color: var(--error-color, #dc3545);
 } 

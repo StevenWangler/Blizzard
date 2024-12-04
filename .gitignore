@@ -6,6 +6,7 @@
 
 # Generated data
 static/data.json
+static/history_local.json
 
 # Python
 __pycache__/
