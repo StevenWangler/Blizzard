@@ -2,7 +2,7 @@ name: Deploy Static Site
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # This runs at 8PM EST (midnight UTC)
+    - cron: '0 1 * * *'  # Runs at 8PM Eastern (1AM UTC)
   workflow_dispatch:  # Allows manual triggering
 
 permissions:
@@ -37,6 +37,7 @@ jobs:
           ASSISTANT_MODEL: ${{ vars.ASSISTANT_MODEL }}
           SELECTION_MODEL: ${{ vars.SELECTION_MODEL }}
           TERMINATION_MODEL: ${{ vars.TERMINATION_MODEL }}
+          BLIZZARD_ENV: 'production'
         run: python main.py
 
       - name: Setup Pages

@@ -257,6 +257,70 @@ def format_settings_for_agents(settings):
     
     return formatted
 
+def get_history_file():
+    """Get the appropriate history file path based on environment."""
+    env = os.getenv('BLIZZARD_ENV', 'development')  # Default to development if not set
+    logging.info(f"Running in {env} environment")
+    return "static/history.json" if env == 'production' else "static/history_local.json"
+
+def update_history(data):
+    """Update history.json with the latest prediction."""
+    history_file = get_history_file()
+    try:
+        # Create or read history file
+        history = {"predictions": []}
+        if os.path.exists(history_file) and os.path.getsize(history_file) > 0:
+            try:
+                with open(history_file, "r") as f:
+                    history = json.load(f)
+                    if not isinstance(history, dict) or "predictions" not in history:
+                        history = {"predictions": []}
+            except json.JSONDecodeError:
+                # If file is invalid JSON, start fresh
+                history = {"predictions": []}
+
+        # Create new prediction entry
+        new_prediction = {
+            "id": datetime.now().strftime("%Y-%m-%d"),
+            "timestamp": data["timestamp"],
+            "prediction": data["decision"],
+            "actual": None,
+            "details": data["conversation"][-1]["content"]  # Last Blizzard message
+        }
+
+        # Add new prediction to history
+        if not isinstance(history.get("predictions"), list):
+            history["predictions"] = []
+        history["predictions"].insert(0, new_prediction)  # Add at the beginning
+
+        # Write updated history
+        with open(history_file, "w") as f:
+            json.dump(history, f, indent=4)
+
+        logging.info(f"Successfully updated {history_file}")
+    except Exception as e:
+        logging.error(f"Error updating {history_file}: {str(e)}")
+
+def inject_environment_into_html():
+    """Inject the current environment into HTML files."""
+    env = os.getenv('BLIZZARD_ENV', 'development')
+    html_files = ['static/index.html', 'static/history.html']
+    
+    for file_path in html_files:
+        try:
+            with open(file_path, 'r') as f:
+                content = f.read()
+            
+            # Replace environment placeholder
+            content = content.replace('{{ env }}', env)
+            
+            with open(file_path, 'w') as f:
+                f.write(content)
+            
+            logging.info(f"Injected environment '{env}' into {file_path}")
+        except Exception as e:
+            logging.error(f"Error injecting environment into {file_path}: {str(e)}")
+
 async def main():
     """
     Main function that orchestrates the snow day prediction process.
@@ -426,6 +490,12 @@ async def main():
         # Save the conversation data to a JSON file
         with open("static/data.json", "w") as f:
             json.dump(conversation_data, f, indent=2)
+
+        # Update history.json with the latest prediction
+        update_history(conversation_data)
+
+        # After generating predictions, inject environment
+        inject_environment_into_html()
 
     except Exception as e:
         logging.error(f"An error occurred: {str(e)}")

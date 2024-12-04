@@ -37,7 +37,15 @@ function updateUI(data) {
     const timeElement = document.getElementById('updateTime');
     if (timeElement && data.timestamp) {
         const date = new Date(data.timestamp);
-        timeElement.textContent = date.toLocaleString();
+        timeElement.textContent = date.toLocaleString('en-US', {
+            timeZone: 'America/New_York',
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
     }
     
     // Update final decision
