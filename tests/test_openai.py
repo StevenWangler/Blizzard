@@ -24,7 +24,7 @@ print(f"API key loaded (first 15 chars): {api_key[:15]}...")
 print(f"API key length: {len(api_key)}")
 
 # Get model name from environment
-model_name = os.getenv("MODEL_NAME")
+model_name = os.getenv("DEFAULT_MODEL")
 if not model_name:
     raise ValueError("No MODEL_NAME found in environment variables!")
 print(f"Using model: {model_name}")

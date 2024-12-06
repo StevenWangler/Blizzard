@@ -3,7 +3,7 @@
 # Snow Day Status
 snow_days:
   allotted: 6
-  used: 0
+  used: 1
 
 # Community Context
 community:
@@ -12,7 +12,6 @@ community:
   city: "Rockford"
   type: "rural"  # urban, suburban, rural
   winter_experience: "experienced"  # experienced, moderate, inexperienced
-  bus_dependent_percentage: 75
   geographic_area: {
     latitude: 43.1206,
     longitude: -85.5561,
@@ -21,9 +20,9 @@ community:
 
 # Current Conditions
 current:
-  hype_level: 1  # Scale of 1-10
+  hype_level: 3  # Scale of 1-10
   nearby_closures: 0  # Number of nearby districts closed
-  social_media_buzz: "low"  # high, medium, low
+  social_media_buzz: "medium"  # high, medium, low
 
 # Additional Notes
 notes:

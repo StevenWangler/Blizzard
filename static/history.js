@@ -4,6 +4,77 @@ function getEnvironment() {
     return metaTag ? metaTag.content : 'development';
 }
 
+// Function to calculate prediction statistics
+function calculateStats(data) {
+    if (!data || !Array.isArray(data.predictions)) {
+        return {
+            total: 0,
+            completed: 0,
+            correct: 0,
+            accuracy: 0
+        };
+    }
+
+    const stats = {
+        total: data.predictions.length,
+        completed: 0,
+        correct: 0,
+        accuracy: 0
+    };
+
+    data.predictions.forEach(prediction => {
+        // Skip predictions without actual outcomes
+        if (prediction.actual === null) return;
+
+        stats.completed++;
+        
+        // Extract verdict from prediction
+        let predictedVerdict = 'NO';
+        if (prediction.prediction && prediction.prediction.includes('SNOW DAY VERDICT:')) {
+            const match = prediction.prediction.match(/SNOW DAY VERDICT:\s*(\w+)/);
+            if (match) {
+                predictedVerdict = match[1].toUpperCase();
+            }
+        }
+
+        // Compare prediction with actual outcome
+        const actualVerdict = prediction.actual.toUpperCase();
+        if (predictedVerdict === actualVerdict) {
+            stats.correct++;
+        }
+    });
+
+    // Calculate accuracy (avoid division by zero)
+    stats.accuracy = stats.completed > 0 ? (stats.correct / stats.completed * 100) : 0;
+
+    return stats;
+}
+
+// Function to update the stats display
+function updateStats(data) {
+    const stats = calculateStats(data);
+    
+    // Update total predictions
+    const totalElement = document.getElementById('totalPredictions');
+    if (totalElement) {
+        totalElement.textContent = stats.total;
+    }
+
+    // Update correct predictions
+    const correctElement = document.getElementById('correctPredictions');
+    if (correctElement) {
+        correctElement.textContent = `${stats.correct}/${stats.completed}`;
+    }
+
+    // Update accuracy
+    const accuracyElement = document.getElementById('accuracyStats');
+    if (accuracyElement) {
+        accuracyElement.textContent = stats.completed > 0 
+            ? `${stats.accuracy.toFixed(1)}%`
+            : 'N/A';
+    }
+}
+
 // Function to load historical data
 async function loadHistoricalData() {
     try {
@@ -33,12 +104,15 @@ async function loadHistoricalData() {
 
         window._historyData = data; // Store data globally
         updateHistoryTable(data);
+        updateStats(data); // Update the statistics display
     } catch (error) {
         console.error('Error loading historical data:', error);
         const tableBody = document.getElementById('historyTableBody');
         if (tableBody) {
             tableBody.innerHTML = '<tr><td colspan="4" class="error-message">No prediction history available yet.</td></tr>';
         }
+        // Update stats with empty data
+        updateStats({ predictions: [] });
     }
 }
 
@@ -58,7 +132,10 @@ function updateHistoryTable(data) {
             timeZone: 'America/New_York',
             year: 'numeric',
             month: 'numeric',
-            day: 'numeric'
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
         });
 
         // Extract the verdict from the prediction if it's in markdown format
@@ -70,10 +147,19 @@ function updateHistoryTable(data) {
             }
         }
 
+        // Extract chance if available
+        let chance = '';
+        if (entry.prediction && entry.prediction.includes('CHANCE OF SNOW DAY:')) {
+            const match = entry.prediction.match(/CHANCE OF SNOW DAY:\s*(\d+)%/);
+            if (match) {
+                chance = ` (${match[1]}%)`;
+            }
+        }
+
         return `
             <tr>
                 <td>${formattedDate}</td>
-                <td>${verdict || 'Unknown'}</td>
+                <td>${verdict}${chance}</td>
                 <td>${entry.actual || 'Pending'}</td>
                 <td>
                     <button class="details-button" onclick="showDetails('${entry.id}')">
@@ -116,9 +202,7 @@ function showDetails(id) {
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    initializeTheme(); // Reuse theme initialization from script.js
     loadHistoricalData();
+    // Set up periodic reload
+    setInterval(loadHistoricalData, 300000); // Every 5 minutes
 });
-
-// Reload data periodically
-setInterval(loadHistoricalData, 300000); // Every 5 minutes 

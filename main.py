@@ -262,15 +262,23 @@ def get_history_file():
     env = os.getenv('BLIZZARD_ENV', 'development')  # Default to development if not set
     history_file = "static/history.json" if env == 'production' else "static/history_local.json"
     
+    logging.info(f"Environment is set to: {env}")
+    logging.info(f"Selected history file: {history_file}")
+    
     # Ensure the static directory exists
     os.makedirs("static", exist_ok=True)
     
     # Create the file if it doesn't exist
     if not os.path.exists(history_file):
+        logging.info(f"Creating new history file: {history_file}")
         with open(history_file, 'w') as f:
             json.dump({"predictions": []}, f)
+    else:
+        logging.info(f"Using existing history file: {history_file}")
+        # Log current file size
+        size = os.path.getsize(history_file)
+        logging.info(f"Current history file size: {size} bytes")
     
-    logging.info(f"Using history file: {history_file}")
     return history_file
 
 def update_history(data):
@@ -288,6 +296,7 @@ def update_history(data):
             try:
                 with open(history_file, "r") as f:
                     history = json.load(f)
+                logging.info(f"Loaded existing history with {len(history.get('predictions', []))} predictions")
             except json.JSONDecodeError as e:
                 logging.error(f"Invalid JSON in history file: {e}")
                 # Backup the corrupted file
@@ -295,42 +304,45 @@ def update_history(data):
                 os.rename(history_file, backup_file)
                 logging.info(f"Backed up corrupted history file to {backup_file}")
 
-        # Create new prediction entry
-        prediction_date = datetime.now().strftime("%Y-%m-%d")
+        # Create new prediction entry with timestamp as unique ID
+        prediction_id = data["timestamp"]  # Use full timestamp for uniqueness
         
-        # Check for existing prediction for today
+        # We'll only update if this exact timestamp exists (which should be rare)
         existing_prediction = next(
-            (p for p in history["predictions"] if p["id"] == prediction_date),
+            (p for p in history["predictions"] if p["id"] == prediction_id),
             None
         )
         
         new_prediction = {
-            "id": prediction_date,
+            "id": prediction_id,
             "timestamp": data["timestamp"],
             "prediction": data["decision"],
             "actual": None,
             "details": data["conversation"][-1]["content"] if data["conversation"] else "No details available"
         }
-
+        
         if existing_prediction:
-            # Update existing prediction
+            # Update existing prediction but preserve actual outcome
             existing_idx = history["predictions"].index(existing_prediction)
+            new_prediction["actual"] = existing_prediction.get("actual")  # Preserve actual outcome
             history["predictions"][existing_idx] = new_prediction
-            logging.info(f"Updated existing prediction for {prediction_date}")
+            logging.info(f"Updated prediction for timestamp {prediction_id}")
         else:
             # Add new prediction at the beginning
             history["predictions"].insert(0, new_prediction)
-            logging.info(f"Added new prediction for {prediction_date}")
+            logging.info(f"Added new prediction for timestamp {prediction_id}")
 
         # Write updated history
         with open(history_file, "w") as f:
             json.dump(history, f, indent=4)
-
-        logging.info(f"Successfully updated {history_file}")
+            logging.info(f"Successfully wrote {len(history['predictions'])} predictions to {history_file}")
         
         # Verify the file was written correctly
         if os.path.getsize(history_file) == 0:
             raise Exception("History file is empty after writing")
+        else:
+            new_size = os.path.getsize(history_file)
+            logging.info(f"New history file size: {new_size} bytes")
             
     except Exception as e:
         logging.error(f"Error updating {history_file}: {str(e)}")
@@ -355,6 +367,22 @@ def inject_environment_into_html():
             logging.info(f"Injected environment '{env}' into {file_path}")
         except Exception as e:
             logging.error(f"Error injecting environment into {file_path}: {str(e)}")
+
+def get_data_file():
+    """Get the appropriate data file path based on environment."""
+    env = os.getenv('BLIZZARD_ENV', 'development')  # Default to development if not set
+    data_file = "static/data.json" if env == 'production' else "static/data_local.json"
+    
+    # Ensure the static directory exists
+    os.makedirs("static", exist_ok=True)
+    
+    # Create the file if it doesn't exist
+    if not os.path.exists(data_file):
+        with open(data_file, 'w') as f:
+            json.dump({}, f)
+    
+    logging.info(f"Using data file: {data_file}")
+    return data_file
 
 async def main():
     """
@@ -523,7 +551,8 @@ async def main():
             raise
 
         # Save the conversation data to a JSON file
-        with open("static/data.json", "w") as f:
+        data_file = get_data_file()
+        with open(data_file, "w") as f:
             json.dump(conversation_data, f, indent=2)
 
         # Update history.json with the latest prediction
@@ -547,10 +576,11 @@ if __name__ == "__main__":
         handlers=[logging.StreamHandler()]
     )
 
-    # Load environment variables
-    load_dotenv()
+    # Load environment variables from env/.env
+    env_path = Path(__file__).parent / 'env' / '.env'
+    load_dotenv(env_path)
     openai_key = os.getenv("OPENAI_API_KEY")
-    model_name = os.getenv("MODEL_NAME", "gpt-4")
+    model_name = os.getenv("DEFAULT_MODEL", "gpt-4")
 
     if not openai_key:
         logging.error("OPENAI_API_KEY not found in environment variables")

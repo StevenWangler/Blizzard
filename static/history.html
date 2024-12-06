@@ -7,10 +7,13 @@
     <meta name="theme-color" content="#2c3e50">
     <title>History | Blizzard | Rockford Public Schools</title>
     
-    <meta name="blizzard-env" content="development">
+    <meta name="blizzard-env" content="production">
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="preload" href="styles.css" as="style">
     <link rel="stylesheet" href="styles.css">
+    <script src="theme.js" defer></script>
+    <script src="script.js" defer></script>
+    <script src="history.js" defer></script>
 </head>
 <body>
     <nav class="navbar" role="navigation">
@@ -34,6 +37,25 @@
         </header>
 
         <main role="main">
+            <section class="stats-panel">
+                <div class="stats-container">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3>Accuracy</h3>
+                            <div id="accuracyStats">Loading...</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Total Predictions</h3>
+                            <div id="totalPredictions">Loading...</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Correct Predictions</h3>
+                            <div id="correctPredictions">Loading...</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <section class="history-panel">
                 <div class="table-container">
                     <table class="history-table">
@@ -57,7 +79,5 @@
             <p>Powered by AI • Updated daily</p>
         </footer>
     </div>
-    <script src="script.js" defer></script>
-    <script src="history.js" defer></script>
 </body>
 </html> 
