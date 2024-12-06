@@ -646,4 +646,42 @@ section {
 
 .history-table .error-message {
     color: var(--error-color, #dc3545);
+}
+
+/* Stats panel styles */
+.stats-panel {
+    margin-bottom: 2rem;
+}
+
+.stats-container {
+    background: var(--surface-color);
+    border-radius: var(--border-radius);
+    padding: var(--spacing);
+    border: 1px solid var(--border-color);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.stat-card {
+    background: var(--glass-bg);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    text-align: center;
+    border: 1px solid var(--border-color);
+}
+
+.stat-card h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    color: var(--text-color-muted);
+}
+
+.stat-card div {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--accent-color);
 } 

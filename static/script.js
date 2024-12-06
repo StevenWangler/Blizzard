@@ -37,7 +37,10 @@ function updateUI(data) {
     const timeElement = document.getElementById('updateTime');
     if (timeElement && data.timestamp) {
         const date = new Date(data.timestamp);
-        timeElement.textContent = date.toLocaleString('en-US', {
+        // Assuming timestamp is already in Eastern time, convert to UTC first
+        const utcDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+        // Then convert back to Eastern for display
+        timeElement.textContent = utcDate.toLocaleString('en-US', {
             timeZone: 'America/New_York',
             year: 'numeric',
             month: 'numeric',
@@ -67,10 +70,20 @@ function updateUI(data) {
     }
 }
 
+// Get the current environment
+function getEnvironment() {
+    const metaTag = document.querySelector('meta[name="blizzard-env"]');
+    return metaTag ? metaTag.content : 'development';
+}
+
 // Function to load data
 async function loadData() {
     try {
-        const response = await fetch('data.json');
+        const env = getEnvironment();
+        const dataFile = env === 'production' ? 'data.json' : 'data_local.json';
+        console.info(`Loading data from ${dataFile} (${env} environment)`);
+        
+        const response = await fetch(dataFile);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -85,38 +98,12 @@ async function loadData() {
     }
 }
 
-// Function to initialize theme
-function initializeTheme() {
-    const themeToggle = document.querySelector('.theme-toggle');
-    const themeIcon = document.getElementById('themeIcon');
-    const htmlElement = document.documentElement;
-
-    // Check saved theme preference
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-        htmlElement.setAttribute('data-theme', savedTheme);
-        themeIcon.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
-    } else {
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        htmlElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
-        themeIcon.textContent = prefersDark ? '🌙' : '☀️';
-    }
-
-    // Theme toggle handler
-    themeToggle.addEventListener('click', () => {
-        const currentTheme = htmlElement.getAttribute('data-theme');
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        htmlElement.setAttribute('data-theme', newTheme);
-        themeIcon.textContent = newTheme === 'dark' ? '🌙' : '☀️';
-        localStorage.setItem('theme', newTheme);
-    });
-}
-
-// Initialize everything when DOM is loaded
+// Initialize data loading when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    initializeTheme(); // Initialize theme toggle for all pages
-    loadData();       // Load data only for pages that need it
-});
-
-// Reload data periodically (only affects pages that use it)
-setInterval(loadData, 300000); 
+    // Load data only for the prediction page
+    if (document.getElementById('finalDecision')) {
+        loadData();
+        // Set up periodic reload
+        setInterval(loadData, 300000);
+    }
+}); 
