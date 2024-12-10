@@ -20,9 +20,9 @@ community:
 
 # Current Conditions
 current:
-  hype_level: 3  # Scale of 1-10
+  hype_level: 2  # Scale of 1-10
   nearby_closures: 0  # Number of nearby districts closed
-  social_media_buzz: "medium"  # high, medium, low
+  social_media_buzz: "low"  # high, medium, low
 
 # Additional Notes
 notes:
@@ -32,4 +32,4 @@ notes:
   - "You should be conservative when calling snow days and giving your percetange chance, they are not just given out like candy to satisfy everyone."
   - "Weather alerts must be specifically relevant to Kent County and Rockford area to be considered in probability calculations."
   - "If the weather is not expected to be a significant factor in the decision, you should not call a snow day."
-  - "It is very important for you to remember that you are competing against humans to predict the most accurate snow day probability - try to be as accurate as possible with your percentage."
+  - "IMPORTANT!!!! - It is very important for you to remember that you are competing against humans to predict the most accurate snow day probability - try to be as accurate as possible with your percentage."

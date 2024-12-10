@@ -1,55 +1,76 @@
-TERMINATION DECISION RULES:
+CONVERSATION TERMINATION STRATEGY
 
-IF any of these are true:
-  - No messages exist
-  - Last message not from Blizzard
-  - Last message doesn't contain "FINAL SNOW DAY PREDICTION"
-  - Last message doesn't contain "Based on our probability analysis:"
-  - Last message doesn't contain "Weather-Based Probability: [number]%"
-  - Last message doesn't contain "Community Experience Factor: [number]"
-  - Last message doesn't contain "Geographic Adjustment: [number]%"
-  - Last message doesn't contain "Final Snow Day Probability: [number]%"
-  - Contains X, Y, Z, or N instead of actual numbers
-  - Assistant hasn't sent "PROBABILITY CALCULATION CONFIRMATION"
-  - Any probability calculations are missing
-  - Any questions are unanswered
-  - Contains discussion of delays/dismissals
-  - Contains non-probability recommendations
-  - Last TWO messages are from BlizzardAssistant
-  - Last message from BlizzardAssistant doesn't contain confirmation
-  - Blizzard hasn't responded after Assistant's confirmation
-THEN: RETURN "CONTINUE"
+CONTINUE CONDITIONS:
+1. Basic Checks:
+   • No messages exist
+   • Last message not from Blizzard
+   • Last TWO messages are from BlizzardAssistant
 
-IF ALL of these are true:
-  - Last message is from Blizzard
-  - Previous message is from BlizzardAssistant and contains confirmation
-  - Message exactly matches this format:
-    ```
-    FINAL SNOW DAY PREDICTION
+2. Missing Required Components:
+   • Message lacks "FINAL SNOW DAY PREDICTION" header
+   • Missing "Based on our probability analysis:" section
+   • Probability calculations incomplete or missing:
+     - Weather-Based Probability
+     - Community Experience Factor
+     - Geographic Adjustment
+     - Final Snow Day Probability
+   • Contains placeholder values (X, Y, Z, N) instead of numbers
 
-    Based on our probability analysis:
+3. Validation Issues:
+   • Assistant hasn't sent "PROBABILITY CALCULATION CONFIRMATION"
+   • Assistant's confirmation message missing or incomplete
+   • Blizzard hasn't responded after Assistant's confirmation
+   • Unanswered questions remain
 
-    [2-3 sentences explaining key probability factors]
+4. Content Problems:
+   • Contains discussion of delays/dismissals
+   • Includes non-probability recommendations
+   • Any probability calculations are missing
+   • Any questions are unanswered
 
-    Weather-Based Probability: [number]%
-    Community Experience Factor: [number]
-    Geographic Adjustment: [number]%
+TERMINATION REQUIREMENTS:
+1. Message Sequence:
+   • Last message must be from Blizzard
+   • Previous message must be from BlizzardAssistant with confirmation
 
-    Final Snow Day Probability: [number]%
-    ```
-  - All [number] fields contain actual numbers
-  - Assistant's last message contains "PROBABILITY CALCULATION CONFIRMATION"
-  - Assistant's last message contains "I confirm there are no remaining questions"
-  - All probability calculations are shown
-  - No pending questions exist
-  - No non-probability topics discussed
-THEN: RETURN "TERMINATE"
+2. Required Format:
+```
+FINAL SNOW DAY PREDICTION
 
-OTHERWISE: RETURN "CONTINUE"
+Based on our probability analysis:
+
+[2-3 sentences explaining key probability factors]
+
+Weather-Based Probability: [number]%
+Community Experience Factor: [number]
+Geographic Adjustment: [number]%
+
+Final Snow Day Probability: [number]%
+```
+
+3. Content Validation:
+   • All [number] fields contain actual numeric values
+   • All probability calculations are shown
+   • No pending questions exist
+   • No non-probability topics discussed
+
+4. Assistant Confirmation:
+   • Contains "PROBABILITY CALCULATION CONFIRMATION"
+   • Includes "I confirm there are no remaining questions"
+
+DECISION LOGIC:
+1. IF any CONTINUE CONDITIONS are true:
+   RETURN: "CONTINUE"
+
+2. IF all TERMINATION REQUIREMENTS are met:
+   RETURN: "TERMINATE"
+
+3. OTHERWISE:
+   RETURN: "CONTINUE"
 
 History:
 {{$history}}
 
-RESPOND WITH EXACTLY ONE OF THESE TWO WORDS:
+!IMPORTANT: RESPOND WITH EXACTLY AND ONLY ONE OF THESE TWO WORDS:
 TERMINATE
 CONTINUE 

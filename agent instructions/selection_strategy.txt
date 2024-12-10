@@ -1,143 +1,41 @@
-AGENT SELECTION RULES:
+AGENT SELECTION STRATEGY
 
-IF no messages exist OR only USER message exists:
-  RETURN: WeatherAgent
+1. Basic Flow:
+   • Start (no messages) → WeatherAgent
+   • After WeatherAgent → SnowResearchLead
+   • After SnowResearchLead → ResearchAssistant
+   • After ResearchAssistant → Blizzard
 
-IF last message was from WeatherAgent:
-  RETURN: SnowResearchLead
+2. Question Handling:
+   • If message contains "?" → Next relevant expert responds
+   • WeatherAgent for weather questions
+   • SnowResearchLead for analysis questions
+   • ResearchAssistant for validation questions
 
-IF last message was from SnowResearchLead AND is first message (contains "Please analyze these weather conditions"):
-  RETURN: ResearchAssistant
+3. Validation:
+   • If analysis needs review → ResearchAssistant
+   • After validation → Blizzard for final verdict
 
-IF last message was from SnowResearchLead AND (contains "?" OR doesn't contain "Initial Analysis Complete"):
-  RETURN: ResearchAssistant
+4. Selection Logic:
+   IF (no messages OR only USER message)
+   RETURN: WeatherAgent
 
-IF last message was from ResearchAssistant AND contains "Analysis Validation Complete":
-  RETURN: Blizzard
+   IF (last message from WeatherAgent)
+   RETURN: SnowResearchLead
 
-IF last message was from ResearchAssistant AND contains "?":
-  RETURN: SnowResearchLead
+   IF (last message from SnowResearchLead)
+   RETURN: ResearchAssistant
 
-IF last message was from ResearchAssistant:
-  RETURN: Blizzard
+   IF (last message from ResearchAssistant)
+   RETURN: Blizzard
 
-# Never end on ResearchAssistant's validation without Blizzard's final verdict
-IF last message was from ResearchAssistant AND previous message was also from ResearchAssistant:
-  RETURN: Blizzard
-
-IF last message was from Blizzard AND doesn't exactly match:
-```
-SNOW DAY VERDICT: [YES/NO]
-CONFIDENCE: [X]%
-KEY FACTORS:
-1. [Primary reason]
-2. [Secondary reason]
-3. [Additional significant factor]
-
-BRIEF EXPLANATION:
-[2-3 sentences summarizing reasoning]
-```
-THEN: RETURN: ResearchAssistant
-
-# Ensure conversation continues if Blizzard hasn't given final format
-IF NOT (last message was from Blizzard AND contains "SNOW DAY VERDICT" AND contains "CONFIDENCE"):
-  IF last message was from Blizzard:
-    RETURN: ResearchAssistant
-  ELSE:
-    RETURN: Blizzard
-
-MESSAGE FORMAT REQUIREMENTS:
-
-WeatherAgent first message:
-```
-WEATHER ANALYSIS REPORT
-
-Current Conditions:
-- Temperature: [exact temp] °F
-- Wind Chill: [exact wind chill] °F
-- Precipitation: [type and amount]
-- Wind: [speed] mph from [direction]
-- Visibility: [exact] miles
-- Ground Conditions: [current state]
-
-Overnight Forecast (7 PM - 8 AM):
-7 PM - 11 PM:
-- Temperature Range: [low-high] °F
-- Wind Chill Range: [low-high] °F
-- Precipitation: [amount] inches of [type]
-- Wind: [speed range] mph from [direction]
-- Visibility: [range] miles
-
-12 AM - 4 AM:
-[Same metrics as above]
-
-5 AM - 8 AM:
-[Same metrics as above]
-
-Active Weather Alerts:
-- Alert Type: [exact alert name]
- Coverage: [specific areas affected]
- Timing: [start] to [end]
- Details: [specific alert details]
-```
-
-SnowResearchLead first message:
-```
-INITIAL WEATHER ANALYSIS
-
-Weather Factors Analysis:
-1. [Detailed analysis of temperature impact]
-2. [Detailed analysis of precipitation]
-3. [Detailed analysis of road conditions]
-4. [Detailed analysis of timing]
-
-Safety Considerations:
-1. [Transportation safety analysis]
-2. [Facility operations analysis]
-3. [Student/staff safety factors]
-
-Community Context:
-1. [Analysis of community preparedness]
-2. [Historical precedent analysis]
-3. [Geographic considerations]
-
-Initial Analysis Complete
-```
-
-ResearchAssistant validation response:
-```
-ANALYSIS VALIDATION
-
-Verification of Key Points:
-1. Weather Data Interpretation: [Confirmation/Corrections]
-2. Safety Assessment: [Validation/Additional Concerns]
-3. Community Context: [Verification/Missing Factors]
-
-Additional Considerations:
-1. [Overlooked factor]
-2. [Important context]
-3. [Risk assessment]
-
-Analysis Validation Complete
-```
-
-Blizzard final format:
-```
-SNOW DAY VERDICT: [YES/NO]
-CONFIDENCE: [X]%
-KEY FACTORS:
-1. [Primary reason]
-2. [Secondary reason]
-3. [Additional significant factor]
-
-BRIEF EXPLANATION:
-[2-3 sentences summarizing reasoning]
-```
+   IF (last message contains "?")
+   RETURN: Most relevant expert based on question topic
 
 History:
 {{$history}}
 
-RESPOND WITH EXACTLY ONE OF THESE NAMES:
+!IMPORTANT: RESPOND WITH EXACTLY AND ONLY ONE OF THESE NAMES:
 WeatherAgent
 SnowResearchLead
 ResearchAssistant
