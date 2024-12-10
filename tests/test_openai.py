@@ -4,12 +4,13 @@ from openai import OpenAI
 import time
 
 # Print current working directory and .env file location
+env_path = os.path.join(os.getcwd(), 'env', '.env')
 print(f"Current working directory: {os.getcwd()}")
-print(f"Looking for .env in: {os.path.abspath('.env')}")
-print(f".env file exists: {os.path.exists('.env')}")
+print(f"Looking for .env in: {env_path}")
+print(f".env file exists: {os.path.exists(env_path)}")
 
 # Load environment variables
-load_dotenv(override=True)  # Add override=True to ensure .env takes precedence
+load_dotenv(dotenv_path=env_path, override=True)  # Add override=True to ensure .env takes precedence
 time.sleep(0.1)  # Small delay to ensure environment variables are loaded
 
 # Print the API key (first few characters) to verify it's loaded

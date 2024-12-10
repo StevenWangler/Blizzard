@@ -517,9 +517,9 @@ async def main():
         # Prepare the initial weather analysis request
         weather_data = get_relevant_weather_information(forecast_data)
         initial_prompt = (
-            f"Please provide a detailed weather report for the following data.\n\n"
+            f"Please provide a detailed weather report for the following data and highlight any notable patterns or concerning conditions that might be relevant for school operations.\n\n"
             f"Weather Data: {weather_data}\n\n"
-            f"Focus ONLY on reporting the weather conditions. DO NOT make any predictions or analysis about snow days."
+            f"After providing your report, please engage with the other agents to help them understand any significant weather patterns or measurements that need attention."
         )
 
         # Start the conversation with the initial prompt
