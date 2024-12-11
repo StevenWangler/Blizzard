@@ -2,9 +2,15 @@ name: Deploy Static Site
 
 on:
   schedule:
-    - cron: '30 0 * * *'  # Runs at 7:30PM EST (00:30 UTC)
-    # Update to '30 23 * * *' during DST to run at 7:30PM EDT (23:30 UTC)
+    - cron: '30 0 * * 0-4'  # Runs at 7:30PM EST (00:30 UTC) Sunday through Thursday
+    # Update to '30 23 * * 0-4' during DST to run at 7:30PM EDT (23:30 UTC)
   workflow_dispatch:  # Allows manual triggering
+    inputs:
+      skip_generation:
+        description: 'Skip running main.py'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write  # Changed to write to allow committing
@@ -20,16 +26,19 @@ jobs:
           fetch-depth: 0  # Fetch all history
       
       - name: Set up Python
+        if: ${{ !inputs.skip_generation }}
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
           
       - name: Install dependencies
+        if: ${{ !inputs.skip_generation }}
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           
       - name: Run site generator
+        if: ${{ !inputs.skip_generation }}
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
