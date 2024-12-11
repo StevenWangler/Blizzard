@@ -34,7 +34,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
           ZIP_CODE: ${{ secrets.ZIP_CODE }}
-          MODEL_NAME: ${{ vars.MODEL_NAME }}
+          MODEL_NAME: ${{ vars.DEFAULT_MODEL }}
           WEATHER_MODEL: ${{ vars.WEATHER_MODEL }}
           BLIZZARD_MODEL: ${{ vars.BLIZZARD_MODEL }}
           ASSISTANT_MODEL: ${{ vars.ASSISTANT_MODEL }}
