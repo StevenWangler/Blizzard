@@ -20,9 +20,9 @@ community:
 
 # Current Conditions
 current:
-  hype_level: 2  # Scale of 1-10
+  hype_level: 8  # Scale of 1-10
   nearby_closures: 0  # Number of nearby districts closed
-  social_media_buzz: "low"  # high, medium, low
+  social_media_buzz: "high"  # high, medium, low
 
 # Additional Notes
 notes:
