@@ -3,7 +3,7 @@
 # Snow Day Status
 snow_days:
   allotted: 6
-  used: 1
+  used: 2
 
 # Community Context
 community:
@@ -20,7 +20,7 @@ community:
 
 # Current Conditions
 current:
-  hype_level: 8  # Scale of 1-10
+  hype_level: 9  # Scale of 1-10
   nearby_closures: 0  # Number of nearby districts closed
   social_media_buzz: "high"  # high, medium, low
 

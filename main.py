@@ -503,7 +503,7 @@ async def main():
                 kernel=termination_kernel,
                 result_parser=lambda result: str(result.value[0]).upper() == 'TERMINATE',
                 history_variable_name="history",
-                maximum_iterations=20,
+                maximum_iterations=30,
             ),
         )
 
