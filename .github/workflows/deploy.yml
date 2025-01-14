@@ -2,7 +2,7 @@ name: Deploy Static Site
 
 on:
   schedule:
-    - cron: '30 0 * * 0-4'  # Runs at 7:30PM EST (00:30 UTC) Sunday through Thursday
+    - cron: '36 0 * * 0-4'  # Runs at 7:36PM EST (00:36 UTC) Sunday through Thursday
     # Update to '30 23 * * 0-4' during DST to run at 7:30PM EDT (23:30 UTC)
   workflow_dispatch:  # Allows manual triggering
     inputs:

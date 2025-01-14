@@ -37,10 +37,7 @@ function updateUI(data) {
     const timeElement = document.getElementById('updateTime');
     if (timeElement && data.timestamp) {
         const date = new Date(data.timestamp);
-        // Assuming timestamp is already in Eastern time, convert to UTC first
-        const utcDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
-        // Then convert back to Eastern for display
-        timeElement.textContent = utcDate.toLocaleString('en-US', {
+        timeElement.textContent = date.toLocaleString('en-US', {
             timeZone: 'America/New_York',
             year: 'numeric',
             month: 'numeric',
@@ -49,6 +46,20 @@ function updateUI(data) {
             minute: '2-digit',
             hour12: true
         });
+
+        // Check if data is from today
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const dataDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        
+        const staleBanner = document.getElementById('staleBanner');
+        const currentBanner = document.getElementById('currentBanner');
+        const isCurrentData = dataDate.getTime() === today.getTime();
+        
+        if (staleBanner && currentBanner) {
+            staleBanner.style.display = isCurrentData ? 'none' : 'block';
+            currentBanner.style.display = isCurrentData ? 'block' : 'none';
+        }
     }
     
     // Update final decision
