@@ -22,7 +22,7 @@ community:
 current:
   hype_level: 10  # Scale of 1-10
   social_media_buzz: "VERY high"  # high, medium, low
-  condition_notes: "It is VERY cold outside right now. Looking at the news, schools are already starting to close around the area."
+  condition_notes: ""
 
 # Additional Notes
 notes:
