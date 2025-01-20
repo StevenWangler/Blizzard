@@ -158,10 +158,10 @@ function updateHistoryTable(data) {
 
         return `
             <tr>
-                <td>${formattedDate}</td>
-                <td>${verdict}${chance}</td>
-                <td>${entry.actual || 'Pending'}</td>
-                <td>
+                <td data-label="Date">${formattedDate}</td>
+                <td data-label="Prediction">${verdict}${chance}</td>
+                <td data-label="Actual">${entry.actual || 'Pending'}</td>
+                <td data-label="Details">
                     <button class="details-button" onclick="showDetails('${entry.id}')">
                         View Details
                     </button>

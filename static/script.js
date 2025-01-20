@@ -37,15 +37,17 @@ function updateUI(data) {
     const timeElement = document.getElementById('updateTime');
     if (timeElement && data.timestamp) {
         const date = new Date(data.timestamp);
-        timeElement.textContent = date.toLocaleString('en-US', {
+        // Ensure we're using EST timezone and proper formatting
+        timeElement.textContent = new Intl.DateTimeFormat('en-US', {
             timeZone: 'America/New_York',
             year: 'numeric',
             month: 'numeric',
             day: 'numeric',
             hour: 'numeric',
             minute: '2-digit',
-            hour12: true
-        });
+            hour12: true,
+            timeZoneName: 'short'  // This will add "EST" to the display
+        }).format(date);
 
         // Check if data is from today
         const now = new Date();
@@ -92,7 +94,6 @@ async function loadData() {
     try {
         const env = getEnvironment();
         const dataFile = env === 'production' ? 'data.json' : 'data_local.json';
-        console.info(`Loading data from ${dataFile} (${env} environment)`);
         
         const response = await fetch(dataFile);
         if (!response.ok) {
@@ -101,7 +102,7 @@ async function loadData() {
         const data = await response.json();
         updateUI(data);
     } catch (error) {
-        console.error('Error loading data:', error);
+        console.error('Error loading data');
         const conversationElement = document.getElementById('conversation');
         if (conversationElement) {
             conversationElement.innerHTML = '<p class="error-message">Error loading data. Please refresh the page.</p>';
