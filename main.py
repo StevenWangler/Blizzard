@@ -245,8 +245,9 @@ def format_settings_for_agents(settings):
     current = settings.get('current', {})
     formatted += "Current Conditions:\n"
     formatted += f"- Community hype level: {current.get('hype_level', 'N/A')}/10\n"
-    formatted += f"- Nearby district closures: {current.get('nearby_closures', 'N/A')}\n"
-    formatted += f"- Social media activity: {current.get('social_media_buzz', 'N/A')}\n\n"
+    formatted += f"- Social media buzz: {current.get('social_media_buzz', 'N/A')}\n"
+    if current.get('condition_notes'):
+        formatted += f"- Current notes: {current.get('condition_notes')}\n\n"
     
     # Additional Notes
     notes = settings.get('notes', [])

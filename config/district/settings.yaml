@@ -22,12 +22,12 @@ community:
 current:
   hype_level: 10  # Scale of 1-10
   social_media_buzz: "VERY high"  # high, medium, low
-  condition_notes: "It is VERY cold outside right now. Looking at the news, schools are already starting to close around the area."
+  condition_notes: "It is VERY cold outside right now, even for Michigan standards. There are a large number of schools already closed in the area for tomorrow."
 
 # Additional Notes
 notes:
   - "It is important to remember that school starts at 7:40 AM - so factor this in when making decisions."
-  - "There is no wiggle room when the temperature (or the feels like temperature) is below 20 degrees - if it is below 20 degrees, a snow day is almost guaranteed."
+  - "There is no wiggle room when the temperature (or the feels like temperature) is below 20 degrees - if it is below 20 degrees, a snow day is guaranteed. As a result, your percentage chance MUST be in the 90-100% range."
   - "You should also factor in that snow crews could be out before 7:40 AM clearing roads, so think of that when seeing snowfall earlier in the night/morning."
   - "Since we live in Michigan, our community is used to snow and winter weather - factor this in when making decisions, it usually takes a lot to close schools"
   - "You should be conservative when calling snow days and giving your percetange chance, they are not just given out like candy to satisfy everyone."
