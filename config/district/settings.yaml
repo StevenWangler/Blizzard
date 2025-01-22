@@ -3,7 +3,7 @@
 # Snow Day Status
 snow_days:
   allotted: 6
-  used: 2
+  used: 4
 
 # Community Context
 community:
@@ -20,9 +20,9 @@ community:
 
 # Current Conditions
 current:
-  hype_level: 10  # Scale of 1-10
-  social_media_buzz: "VERY high"  # high, medium, low
-  condition_notes: "It is VERY cold outside right now, even for Michigan standards. There are a large number of schools already closed in the area for tomorrow."
+  hype_level: 6  # Scale of 1-10
+  social_media_buzz: "medium"  # high, medium, low
+  condition_notes: ""
 
 # Additional Notes
 notes:
