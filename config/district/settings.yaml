@@ -20,9 +20,9 @@ community:
 
 # Current Conditions
 current:
-  hype_level: 6  # Scale of 1-10
-  social_media_buzz: "medium"  # high, medium, low
-  condition_notes: ""
+  hype_level: 10  # Scale of 1-10
+  social_media_buzz: "high"  # high, medium, low
+  condition_notes: "Roads are getting bad currently and evening activities are starting to get cancelled. As of 6:17 PM EST on Wednesday, February 12, 2025, the current weather in Rockford, Michigan (49341) is snowy, with a temperature of 22°F (-5°C). A Winter Weather Advisory is in effect until 7:00 AM EST Thursday, February 13, due to expected additional snow accumulations of 2 to 4 inches."
 
 # Additional Notes
 notes:
